@@ -2305,3 +2305,116 @@ body::after {
         max-width: 100%
     }
 }
+
+/* ─── RARITY COLORS ────────────────────── */
+.artifact-item.rarity-common.owned { border-color: var(--border-soft); }
+.artifact-item.rarity-rare.owned { border-color: #a78bfa; background: rgba(167, 139, 250, 0.08); }
+.artifact-item.rarity-legendary.owned { border-color: #f59e0b; background: rgba(245, 158, 11, 0.08); box-shadow: 0 0 15px rgba(245, 158, 11, 0.15); }
+
+.art-rarity {
+    font-size: 0.55rem;
+    font-weight: 800;
+    letter-spacing: 1.5px;
+    margin-top: 4px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    display: inline-block;
+}
+.art-rarity.common  { color: var(--muted); background: rgba(139, 143, 165, 0.1); }
+.art-rarity.rare    { color: #a78bfa; background: rgba(167, 139, 250, 0.12); }
+.art-rarity.legendary { color: #f59e0b; background: rgba(245, 158, 11, 0.12); }
+
+.artifact-item.rarity-legendary.owned .art-icon {
+    animation: legendaryGlow 2s ease-in-out infinite alternate;
+}
+@keyframes legendaryGlow {
+    0% { filter: drop-shadow(0 0 6px rgba(245, 158, 11, 0.3)); }
+    100% { filter: drop-shadow(0 0 18px rgba(245, 158, 11, 0.7)); }
+}
+
+/* ─── NOTIFICATION LOG ─────────────────── */
+.notif-log {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    max-height: 400px;
+    overflow-y: auto;
+}
+.notif-entry {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    border-radius: 8px;
+    background: rgba(129, 140, 248, 0.04);
+    border: 1px solid var(--border-soft);
+    transition: background 0.18s ease;
+}
+.notif-entry:hover { background: rgba(129, 140, 248, 0.10); }
+.notif-ico { font-size: 1.2rem; flex-shrink: 0; }
+.notif-body { flex: 1; }
+.notif-title { font-weight: 700; font-size: 0.82rem; color: var(--text-accent); }
+.notif-desc { font-size: 0.72rem; color: var(--muted); }
+.notif-time { font-size: 0.65rem; color: var(--dim); font-family: 'JetBrains Mono', monospace; white-space: nowrap; }
+.notif-empty { text-align: center; color: var(--dim); padding: 30px; font-size: 0.9rem; }
+
+/* ─── MILESTONES ───────────────────────── */
+.milestone-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 8px;
+}
+.milestone-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    border-radius: 8px;
+    background: rgba(129, 140, 248, 0.04);
+    border: 1px solid var(--border-soft);
+    transition: all 0.18s ease;
+}
+.milestone-item:hover { background: rgba(129, 140, 248, 0.10); }
+.milestone-item.locked-ms { opacity: 0.4; filter: grayscale(0.7); }
+.milestone-item.unlocked { border-color: rgba(52, 211, 153, 0.30); }
+.ms-ico { font-size: 1.4rem; flex-shrink: 0; }
+.ms-info { flex: 1; }
+.ms-name { font-weight: 700; font-size: 0.85rem; color: var(--text-accent); }
+.ms-desc { font-size: 0.72rem; color: var(--muted); }
+.ms-check { color: var(--success); font-size: 1rem; font-weight: 900; }
+
+/* ─── SAVE MANAGEMENT ──────────────────── */
+.setting-divider {
+    height: 1px;
+    background: var(--border-soft);
+    margin: 16px 0;
+}
+.save-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 10px;
+}
+.save-btn {
+    flex: 1;
+    padding: 12px;
+    border-radius: 10px;
+    border: 1px solid var(--border-soft);
+    background: rgba(129, 140, 248, 0.06);
+    color: var(--text);
+    font-size: 0.88rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s var(--spring);
+}
+.save-btn:hover {
+    background: rgba(129, 140, 248, 0.15);
+    border-color: var(--dna);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px var(--dna-glow);
+}
+.import-btn:hover {
+    border-color: var(--gen);
+    background: rgba(20, 184, 166, 0.10);
+    box-shadow: 0 6px 16px var(--gen-glow);
+}

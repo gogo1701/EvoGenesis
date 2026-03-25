@@ -114,14 +114,33 @@ const ACHIEVEMENTS = [
     { id:'frenzy5',    name:'Wave Veteran',  desc:'Survive 5 DNA waves.',            icon:'🌊', check: g => g.totalFrenzies >= 5 },
     { id:'rich',       name:'Mutant Collector', desc:'Hold 50 mutations at once.',  icon:'🧪', check: g => g.mutations >= 50 },
     { id:'win',        name:'Transhuman',           desc:'Reach the final stage.',         icon:'✨', check: g => g.hasWon },
+    { id:'evo25',      name:'Master of All',        desc:'Evolve 25 times.',               icon:'🧬', check: g => g.evoCount >= 25 },
+    { id:'leap5',      name:'Genomic Legend',       desc:'Make 5 genomic leaps.',           icon:'🔬', check: g => g.leapCount >= 5 },
+    { id:'click100k',  name:'Obsessive Clicker',    desc:'100,000 clicks.',                icon:'🫨', check: g => g.totalClicks >= 100000 },
+    { id:'dps10k',     name:'Transcendent Output',  desc:'Reach 10,000 DNA/sec.',          icon:'🚀', check: g => dps() >= 10000 },
+    { id:'art4',       name:'Collector',            desc:'Find 4 artifacts.',              icon:'🦴', check: g => g.artifacts.length >= 4 },
+    { id:'art8',       name:'Treasure Hunter',      desc:'Find 8 artifacts.',              icon:'💎', check: g => g.artifacts.length >= 8 },
+    { id:'art12',      name:'Master Curator',       desc:'Find all 12 artifacts.',         icon:'🌟', check: g => g.artifacts.length >= 12 },
 ];
 
 const ARTIFACTS = [
-    { id: 'a1', name: 'Fossilized Bone', icon: '🦴', desc: '+10% Click Power', effect: (G) => ({ clickMult: 1.1 }) },
-    { id: 'a2', name: 'Amber Mosquito', icon: '🦟', desc: '+10% Passive Income', effect: (G) => ({ dpsMult: 1.1 }) },
-    { id: 'a3', name: 'Crystalized Nucleus', icon: '💎', desc: '+5% Mutation Chance', effect: (G) => ({ critChance: 0.05 }) },
-    { id: 'a4', name: 'Ancient Feather', icon: '🪶', desc: '×1.2 Production', effect: (G) => ({ prodMult: 1.2 }) }
+    // Common (0.10% drop rate)
+    { id: 'a1', name: 'Fossilized Bone', icon: '🦴', rarity: 'common', desc: '+10% Click Power', effect: () => ({ clickMult: 1.1 }) },
+    { id: 'a2', name: 'Amber Mosquito', icon: '🦟', rarity: 'common', desc: '+10% Passive Income', effect: () => ({ dpsMult: 1.1 }) },
+    { id: 'a3', name: 'Crystalized Nucleus', icon: '💎', rarity: 'common', desc: '+5% Crit Chance', effect: () => ({ critChance: 0.05 }) },
+    { id: 'a4', name: 'Ancient Feather', icon: '🪶', rarity: 'common', desc: '×1.2 Production', effect: () => ({ prodMult: 1.2 }) },
+    // Rare (0.04% drop rate)
+    { id: 'a5', name: 'Primordial Soup Vial', icon: '🧪', rarity: 'rare', desc: '+20% Passive Income', effect: () => ({ dpsMult: 1.2 }) },
+    { id: 'a6', name: 'Meteorite Shard', icon: '☄️', rarity: 'rare', desc: '+25% Click Power', effect: () => ({ clickMult: 1.25 }) },
+    { id: 'a7', name: 'Petrified Egg', icon: '🥚', rarity: 'rare', desc: '+8% Crit Chance', effect: () => ({ critChance: 0.08 }) },
+    { id: 'a8', name: 'Trilobite Fossil', icon: '🐚', rarity: 'rare', desc: '×1.35 Production', effect: () => ({ prodMult: 1.35 }) },
+    // Legendary (0.01% drop rate)
+    { id: 'a9', name: 'Dragon Scale', icon: '🐉', rarity: 'legendary', desc: '+50% Click Power', effect: () => ({ clickMult: 1.5 }) },
+    { id: 'a10', name: 'Phoenix Feather', icon: '🔥', rarity: 'legendary', desc: '×1.75 Production', effect: () => ({ prodMult: 1.75 }) },
+    { id: 'a11', name: 'Cosmic Seed', icon: '🌟', rarity: 'legendary', desc: '+50% Passive Income', effect: () => ({ dpsMult: 1.5 }) },
+    { id: 'a12', name: 'Time Crystal', icon: '⏳', rarity: 'legendary', desc: '+15% Crit Chance', effect: () => ({ critChance: 0.15 }) },
 ];
+const RARITY_DROP = { common: 0.001, rare: 0.0004, legendary: 0.0001 };
 
 const EVENTS = [
     { name: 'DNA Wave',       emoji: '⚡', text: '×3 production!',         mult: 3,   dur: 30 },
@@ -130,12 +149,115 @@ const EVENTS = [
     { name: 'Ice Age',        emoji: '❄️', text: 'Production drops, but mutations are doubled!', mult: 0.35, dur: 35, mutGainMult: 2 },
     { name: 'Genetic Drift',  emoji: '🎲', text: 'Chaotic changes — ×4 production!', mult: 4,   dur: 15 },
     { name: 'Genetic Puzzle', emoji: '🧬', text: 'Solve the sequence for a permanent boost!', type: 'puzzle' },
+    { name: 'Symbiotic Surge',emoji: '🤝', text: '×2 production for 60s!',  mult: 2,   dur: 60 },
+    { name: 'Extinction Event',emoji:'💀', text: 'Production halved, but ×3 mutations!', mult: 0.5, dur: 40, mutGainMult: 3 },
+    { name: 'Golden Gene',    emoji: '✨', text: '×6 click power for 10s!', mult: 6,   dur: 10, clickOnly: true },
+    { name: 'Primordial Rain', emoji:'🌧️', text: '×2.5 production for 25s!', mult: 2.5, dur: 25 },
 ];
 
 const SAVE_KEY   = 'evoGenesis_v3';
 const EVO_BASE   = 1000;
 const EVO_GROWTH = 8;
 const LEAP_REQ   = 5;
+
+// ─── MILESTONES ────────────────────────────────
+const MILESTONES = [
+    { id:'ms1', name:'Persistent Clicker',  desc:'Auto-click 1×/sec',            icon:'🤖', type:'evo',  req:3,  autoClick:1 },
+    { id:'ms2', name:'Rapid Adaptation',    desc:'+10% all production',           icon:'⚡', type:'evo',  req:5,  prodBonus:0.10 },
+    { id:'ms3', name:'Genetic Memory',      desc:'Keep 10% DNA on evolution',     icon:'🧠', type:'evo',  req:10, dnaRetain:0.10 },
+    { id:'ms4', name:'Eternal Evolution',   desc:'+25% mutation gain',            icon:'♾️', type:'evo',  req:15, mutBonus:0.25 },
+    { id:'ms5', name:'Cosmic Awareness',    desc:'Auto-click 3×/sec',             icon:'🌌', type:'evo',  req:25, autoClick:3 },
+    { id:'ms6', name:'Genome Pioneer',      desc:'+20% all production',           icon:'🔬', type:'leap', req:1,  prodBonus:0.20 },
+    { id:'ms7', name:'Genomic Master',      desc:'-15% all costs',                icon:'🧬', type:'leap', req:3,  costReduce:0.15 },
+    { id:'ms8', name:'Transcendent',        desc:'Auto-click 5×/sec',             icon:'✨', type:'leap', req:5,  autoClick:5 },
+];
+
+function isMilestoneUnlocked(m) {
+    if (m.type === 'evo') return G.evoCount >= m.req;
+    if (m.type === 'leap') return G.leapCount >= m.req;
+    return false;
+}
+function getAutoClickRate() {
+    let rate = 0;
+    MILESTONES.forEach(m => { if (m.autoClick && isMilestoneUnlocked(m)) rate = Math.max(rate, m.autoClick); });
+    return rate;
+}
+function milestoneProdMult() {
+    let m = 1;
+    MILESTONES.forEach(ms => { if (ms.prodBonus && isMilestoneUnlocked(ms)) m *= (1 + ms.prodBonus); });
+    return m;
+}
+function milestoneMutMult() {
+    let m = 1;
+    MILESTONES.forEach(ms => { if (ms.mutBonus && isMilestoneUnlocked(ms)) m *= (1 + ms.mutBonus); });
+    return m;
+}
+function milestoneCostMult() {
+    let m = 1;
+    MILESTONES.forEach(ms => { if (ms.costReduce && isMilestoneUnlocked(ms)) m *= (1 - ms.costReduce); });
+    return m;
+}
+function milestoneDnaRetain() {
+    let r = 0;
+    MILESTONES.forEach(ms => { if (ms.dnaRetain && isMilestoneUnlocked(ms)) r = Math.max(r, ms.dnaRetain); });
+    return r;
+}
+
+// ─── SOUND SYSTEM ──────────────────────────────
+const SFX = {
+    ctx: null,
+    init() { try { this.ctx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) {} },
+    play(freq, dur, type = 'sine', vol = 0.12) {
+        if (!G.settings.sound || !this.ctx) return;
+        if (this.ctx.state === 'suspended') this.ctx.resume();
+        const o = this.ctx.createOscillator(), g = this.ctx.createGain();
+        o.type = type; o.frequency.value = freq;
+        g.gain.setValueAtTime(vol, this.ctx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + dur);
+        o.connect(g); g.connect(this.ctx.destination);
+        o.start(); o.stop(this.ctx.currentTime + dur);
+    },
+    click()   { this.play(600, 0.06, 'sine', 0.08); },
+    crit()    { this.play(800, 0.12, 'square', 0.08); setTimeout(() => this.play(1200, 0.08, 'sine', 0.06), 50); },
+    buy()     { this.play(500, 0.08, 'triangle', 0.07); },
+    evolve()  { this.play(400, 0.25, 'sine', 0.10); setTimeout(() => this.play(600, 0.25, 'sine', 0.10), 80); setTimeout(() => this.play(800, 0.3, 'sine', 0.10), 160); },
+    achieve() { this.play(700, 0.12, 'sine', 0.08); setTimeout(() => this.play(900, 0.15, 'sine', 0.08), 80); },
+    artifact(){ this.play(500, 0.15, 'sine', 0.08); setTimeout(() => this.play(700, 0.12, 'sine', 0.08), 60); setTimeout(() => this.play(1000, 0.2, 'sine', 0.06), 130); },
+    event()   { this.play(300, 0.15, 'triangle', 0.08); setTimeout(() => this.play(500, 0.15, 'triangle', 0.08), 120); },
+};
+
+// ─── NOTIFICATION LOG ──────────────────────────
+const notifLog = [];
+const MAX_LOG = 50;
+function logNotif(icon, title, desc) {
+    notifLog.unshift({ icon, title, desc, time: new Date().toLocaleTimeString() });
+    if (notifLog.length > MAX_LOG) notifLog.pop();
+}
+
+// ─── EXPORT / IMPORT ───────────────────────────
+function exportSave() {
+    save();
+    const data = localStorage.getItem(SAVE_KEY);
+    if (!data) return;
+    const encoded = btoa(unescape(encodeURIComponent(data)));
+    navigator.clipboard.writeText(encoded).then(() => {
+        showToast('event-toast', '📋', 'Exported!', 'Save code copied to clipboard.');
+    }).catch(() => {
+        prompt('Copy this save code:', encoded);
+    });
+}
+function importSave() {
+    const code = prompt('Paste your save code:');
+    if (!code || !code.trim()) return;
+    try {
+        const decoded = decodeURIComponent(escape(atob(code.trim())));
+        JSON.parse(decoded);
+        localStorage.setItem(SAVE_KEY, decoded);
+        location.reload();
+    } catch(e) {
+        alert('Invalid save code!');
+    }
+}
 
 // ─── КЕШИРАНИ DOM ЕЛЕМЕНТИ ──────────────────────
 const DOM = {};
@@ -266,7 +388,7 @@ function defaults() {
         startTime: Date.now(),
         totalPlayTime: 0,   // ms
         achUnlocked: [],
-        settings: { confirmEvo: true, confirmLeap: true, particles: true, notation: 'short' },
+        settings: { confirmEvo: true, confirmLeap: true, particles: true, notation: 'short', sound: true },
         lastTick: Date.now(),
     };
 }
@@ -301,14 +423,14 @@ function dnaCostMult()  {
     const leapMult = Math.pow(0.95, G.leapCount);
     const enzymeMult = evoEnzymeMult();
     const traitMult = G.traits?.t4 ? 0.8 : 1;
-    return baseMult * leapMult * enzymeMult * traitMult;
+    return baseMult * leapMult * enzymeMult * traitMult * milestoneCostMult();
 }
 function mutCostMult()  { 
     const baseMult = Math.max(0.4, 1 - 0.15 * G.gu.epigenetics);
     const leapMult = Math.pow(0.95, G.leapCount);
     const enzymeMult = evoEnzymeMult();
     const traitMult = G.traits?.t4 ? 0.8 : 1;
-    return baseMult * leapMult * enzymeMult * traitMult;
+    return baseMult * leapMult * enzymeMult * traitMult * milestoneCostMult();
 }
 function eventMultAll() { return (activeEvent && !activeEvent.clickOnly) ? activeEvent.mult : 1; }
 function eventMultClk() { return (activeEvent && activeEvent.clickOnly) ? activeEvent.mult : 1; }
@@ -359,7 +481,7 @@ function prodMult() {
     const enz  = Math.pow(1.25, G.du.enzyme);
     const div  = Math.pow(1.50, G.du.division);
     const camb = Math.pow(2.00, G.gu.cambrian);
-    return enz * div * camb * evoGlobalMult() * eventMultAll() * G.puzzleMult * m;
+    return enz * div * camb * evoGlobalMult() * eventMultAll() * G.puzzleMult * m * milestoneProdMult();
 }
 function clickPow() {
     let m = 1;
@@ -430,7 +552,7 @@ function mutGain()   {
     const raw  = Math.floor(Math.pow(G.totalDNA / 100, 0.5));
     const cBon = 1 + 0.25 * G.mu.chromosome;
     const sBon = 1 + 0.50 * G.gu.symbiogenesis;
-    return Math.max(1, Math.floor(raw * cBon * sBon * eventMutGainMult()));
+    return Math.max(1, Math.floor(raw * cBon * sBon * eventMutGainMult() * milestoneMutMult()));
 }
 function genGain() { return Math.max(1, Math.floor(Math.pow(G.totalMutations / 5, 0.5))); }
 function canEvo()  { return G.totalDNA >= evoThresh(); }
@@ -479,6 +601,7 @@ function doClick(e) {
     const pw = clickPow() * critMult;
     
     G.dna += pw; G.totalDNA += pw; G.allTimeDNA += pw; G.totalClicks++;
+    if (isCrit) SFX.crit(); else SFX.click();
     const rect = e.currentTarget.getBoundingClientRect();
     const cx = rect.left + rect.width / 2;
     const cy = rect.top;
@@ -494,19 +617,19 @@ function doClick(e) {
 
 function buyDNA(i) {
     const { count, total } = costBulk(costDNA, i, 'du', DNA_UPG, G.dna, buyQty);
-    if (count > 0 && G.dna >= total) { G.dna -= total; G.du[DNA_UPG[i].id] += count; buildShop(); }
+    if (count > 0 && G.dna >= total) { G.dna -= total; G.du[DNA_UPG[i].id] += count; SFX.buy(); buildShop(); }
 }
 function buyMut(i) {
     const u = MUT_UPG[i];
     if (u.max && G.mu[u.id] >= u.max) return;
     const { count, total } = costBulk(costMut, i, 'mu', MUT_UPG, G.mutations, buyQty);
-    if (count > 0 && G.mutations >= total) { G.mutations -= total; G.mu[u.id] += count; buildShop(); }
+    if (count > 0 && G.mutations >= total) { G.mutations -= total; G.mu[u.id] += count; SFX.buy(); buildShop(); }
 }
 function buyGen(i) {
     const u = GEN_UPG[i];
     if (u.max && G.gu[u.id] >= u.max) return;
     const { count, total } = costBulk(costGen, i, 'gu', GEN_UPG, G.genomes, buyQty);
-    if (count > 0 && G.genomes >= total) { G.genomes -= total; G.gu[u.id] += count; buildShop(); }
+    if (count > 0 && G.genomes >= total) { G.genomes -= total; G.gu[u.id] += count; SFX.buy(); buildShop(); }
 }
 
 // ─── EVOLUTION TREE BUY LOGIC ─────────────────
@@ -572,7 +695,10 @@ function evolve() {
         if (!confirm(`🧬 Evolution Leap!\n\nYou will gain: +${gain} mutations\nYou will lose: all DNA points and DNA upgrades.\n\nContinue?`)) return;
     }
     G.mutations += gain; G.totalMutations += gain; G.evoCount++;
-    G.dna = G.mu.adaptation * 100; G.totalDNA = 0;
+    const retainPct = milestoneDnaRetain();
+    const retainedDNA = retainPct > 0 ? Math.floor(G.dna * retainPct) : 0;
+    G.dna = G.mu.adaptation * 100 + retainedDNA; G.totalDNA = 0;
+    SFX.evolve();
     G.du = { replicase:0, ribosome:0, mitochondria:0, enzyme:0, division:0 };
     flashScreen();
     showToast('evo-toast', '🧬', 'Evolution!', `+${fmt(gain)} mutations · Stage: ${STAGES[Math.min(G.evoCount, STAGES.length-1)].name}`);
@@ -607,6 +733,7 @@ function genomeLeap() {
     G.evoSkills = savedSkills; // restore skills
 
     flashScreen();
+    SFX.evolve();
     showToast('evo-toast', '🔬', 'Genomic Leap!', `+${fmt(gain)} genomes`);
     checkAchievements(); buildShop(); updateUI(); buildTimeline();
 }
@@ -668,6 +795,7 @@ function showToast(cls, icon, title, desc, duration) {
     DOM.toasts.appendChild(t);
     const dur = duration || 4000;
     setTimeout(() => { t.classList.add('out'); setTimeout(() => t.remove(), 300); }, dur);
+    logNotif(icon, title, desc);
 }
 
 // ─── ACHIEVEMENTS ──────────────────────────────
@@ -679,6 +807,7 @@ function checkAchievements() {
         if (a.check(G)) {
             unlocked.push(a.id);
             showToast('ach-toast', '🏆', a.name, a.desc, 5000);
+            SFX.achieve();
         }
     }
 }
@@ -707,6 +836,7 @@ function trySpawnEvent() {
     DOM.eventText.textContent = ev.name + '! ' + ev.text;
     DOM.clickBtn.classList.add('frenzy');
     showToast('event-toast', ev.emoji, ev.name, ev.text + ` (${ev.dur} sec)`, 3000);
+    SFX.event();
     checkAchievements();
 }
 function updateEvent() {
@@ -1232,7 +1362,12 @@ document.getElementById('btn-help').addEventListener('click', () => {
             <tr><td><kbd>Space</kbd></td><td>Click</td></tr>
             <tr><td><kbd>1-4</kbd></td><td>Quantity: ×1, ×10, ×25, Max</td></tr>
             <tr><td><kbd>E</kbd></td><td>Evolve</td></tr>
+            <tr><td><kbd>L</kbd></td><td>Genomic Leap</td></tr>
             <tr><td><kbd>H</kbd></td><td>Help (this page)</td></tr>
+            <tr><td><kbd>S</kbd></td><td>Statistics</td></tr>
+            <tr><td><kbd>A</kbd></td><td>Achievements</td></tr>
+            <tr><td><kbd>N</kbd></td><td>Notification Log</td></tr>
+            <tr><td><kbd>M</kbd></td><td>Settings</td></tr>
             <tr><td><kbd>Esc</kbd></td><td>Close Window</td></tr>
         </table>
     `);
@@ -1259,9 +1394,13 @@ document.getElementById('btn-stats').addEventListener('click', () => {
             <div class="sg-item"><small>Genomic Leaps</small><strong>${G.leapCount}</strong></div>
             <div class="sg-item"><small>Events Survived</small><strong>${G.totalFrenzies}</strong></div>
             <div class="sg-item"><small>Achievements</small><strong>${G.achUnlocked.length} / ${ACHIEVEMENTS.length}</strong></div>
+            <div class="sg-item"><small>Artifacts</small><strong>${G.artifacts.length} / ${ARTIFACTS.length}</strong></div>
+            <div class="sg-item"><small>Auto-Click</small><strong>${getAutoClickRate() > 0 ? getAutoClickRate() + '×/sec' : 'None'}</strong></div>
             <div class="sg-item"><small>Play Time</small><strong>${fmtTime(pt)}</strong></div>
             <div class="sg-item"><small>Time to Evolution</small><strong>${timeToEvo === Infinity ? '∞' : fmtTime(timeToEvo)}</strong></div>
         </div>
+        <div class="section-header" style="margin-top:18px"><h3>🏅 Milestones</h3><p>Permanent bonuses from evolution progress</p></div>
+        ${buildMilestoneHTML()}
     `);
 });
 
@@ -1296,8 +1435,18 @@ document.getElementById('btn-settings').addEventListener('click', () => {
             <button class="toggle ${G.settings.particles ? 'on' : ''}" data-setting="particles"></button>
         </div>
         <div class="setting-row">
+            <div class="setting-label">Sound Effects<small>Click, evolution, and event sounds</small></div>
+            <button class="toggle ${G.settings.sound ? 'on' : ''}" data-setting="sound"></button>
+        </div>
+        <div class="setting-row">
             <div class="setting-label">Number Notation<small>Short: 1.5M · Scientific: 1.50e+6</small></div>
             <button class="toggle ${G.settings.notation === 'scientific' ? 'on' : ''}" data-setting="notation"></button>
+        </div>
+        <div class="setting-divider"></div>
+        <h3>💾 Save Management</h3>
+        <div class="save-actions">
+            <button class="save-btn export-btn" id="btn-export">📤 Export Save</button>
+            <button class="save-btn import-btn" id="btn-import">📥 Import Save</button>
         </div>
     `);
     document.querySelectorAll('.toggle[data-setting]').forEach(btn => {
@@ -1312,6 +1461,8 @@ document.getElementById('btn-settings').addEventListener('click', () => {
             }
         });
     });
+    document.getElementById('btn-export').addEventListener('click', exportSave);
+    document.getElementById('btn-import').addEventListener('click', importSave);
 });
 
 // ─── TABS & BUY QTY ───────────────────────────
@@ -1387,6 +1538,13 @@ function tick(now) {
         const gain = d * dt;
         G.dna += gain; G.totalDNA += gain; G.allTimeDNA += gain;
     }
+    // Auto-clicker from milestones
+    const acRate = getAutoClickRate();
+    if (acRate > 0 && dt > 0 && dt < 2) {
+        const autoPw = clickPow() * acRate * dt;
+        G.dna += autoPw; G.totalDNA += autoPw; G.allTimeDNA += autoPw;
+    }
+
     throttledAchCheck();
 
     // Fast path: buttery smooth 60 FPS counting for main resources
@@ -1439,6 +1597,11 @@ function bindEvents() {
             case 'Digit4': case 'Numpad4': setQty('max'); break;
             case 'KeyE': if (canEvo()) evolve(); break;
             case 'KeyH': document.getElementById('btn-help').click(); break;
+            case 'KeyS': document.getElementById('btn-stats').click(); break;
+            case 'KeyA': document.getElementById('btn-ach').click(); break;
+            case 'KeyL': if (canLeap()) genomeLeap(); break;
+            case 'KeyM': { const ms = document.getElementById('btn-settings'); if (ms) ms.click(); } break;
+            case 'KeyN': openNotifLog(); break;
         }
     });
     const bab = document.getElementById('btn-buy-all');
@@ -1453,12 +1616,42 @@ function setQty(q) {
     buildShop();
 }
 
+// ─── NOTIFICATION LOG VIEWER ───────────────
+function openNotifLog() {
+    let html = '<div class="notif-log">';
+    if (notifLog.length === 0) {
+        html += '<div class="notif-empty">No notifications yet.</div>';
+    } else {
+        notifLog.forEach(n => {
+            html += `<div class="notif-entry"><span class="notif-ico">${n.icon}</span><div class="notif-body"><div class="notif-title">${n.title}</div><div class="notif-desc">${n.desc}</div></div><span class="notif-time">${n.time}</span></div>`;
+        });
+    }
+    html += '</div>';
+    openModal('📜 Notification Log', html);
+}
+
+// ─── MILESTONES VIEWER (in Stats) ─────────
+function buildMilestoneHTML() {
+    let html = '<div class="milestone-grid">';
+    MILESTONES.forEach(m => {
+        const done = isMilestoneUnlocked(m);
+        html += `<div class="milestone-item ${done ? 'unlocked' : 'locked-ms'}">
+            <span class="ms-ico">${done ? m.icon : '🔒'}</span>
+            <div class="ms-info"><div class="ms-name">${done ? m.name : '???'}</div><div class="ms-desc">${done ? m.desc : (m.type === 'evo' ? m.req + ' evolutions' : m.req + ' leaps') + ' required'}</div></div>
+            ${done ? '<span class="ms-check">✓</span>' : ''}
+        </div>`;
+    });
+    html += '</div>';
+    return html;
+}
+
 // ─── ИНИЦИАЛИЗАЦИЯ ──────────────────────────────
 cacheDom();
 bindEvents();
 load();
 initTabs();
 initBgEntities();
+SFX.init();
 buildShop();
 buildTimeline();
 updateUI();
@@ -1469,6 +1662,9 @@ setInterval(save, 2000);
 setInterval(trySpawnEvent, 60000); // try event every 60s
 // Check event on load too (after 10s to not overwhelm)
 setTimeout(trySpawnEvent, 10000);
+// Notification log button
+const btnLog = document.getElementById('btn-log');
+if (btnLog) btnLog.addEventListener('click', openNotifLog);
 // ─── GENETIC PUZZLE ────────────────────────────
 let puzzleSequence = [];
 let puzzleInput = [];
@@ -1519,13 +1715,20 @@ function handlePuzzleClick(base) {
 }
 
 function tryDropArtifact() {
-    if (Math.random() > 0.001) return; // 0.1% chance
     const unowned = ARTIFACTS.filter(a => !G.artifacts.includes(a.id));
     if (unowned.length === 0) return;
-    
-    const art = unowned[Math.floor(Math.random() * unowned.length)];
+    // Roll for each rarity tier
+    const roll = Math.random();
+    let candidates = [];
+    if (roll < RARITY_DROP.legendary) candidates = unowned.filter(a => a.rarity === 'legendary');
+    else if (roll < RARITY_DROP.rare) candidates = unowned.filter(a => a.rarity === 'rare');
+    else if (roll < RARITY_DROP.common) candidates = unowned.filter(a => a.rarity === 'common');
+    if (candidates.length === 0) return;
+    const art = candidates[Math.floor(Math.random() * candidates.length)];
     G.artifacts.push(art.id);
-    showToast('art-toast', art.icon, 'Artifact Discovered!', art.name);
+    const rarityLabel = art.rarity.charAt(0).toUpperCase() + art.rarity.slice(1);
+    showToast('art-toast', art.icon, rarityLabel + ' Artifact!', art.name + ' — ' + art.desc);
+    SFX.artifact();
     buildArtifacts(); updateUI();
 }
 
@@ -1535,12 +1738,13 @@ function buildArtifacts() {
     ARTIFACTS.forEach(a => {
         const owned = G.artifacts.includes(a.id);
         const el = document.createElement('div');
-        el.className = `artifact-item ${owned ? 'owned' : 'missing'}`;
+        el.className = `artifact-item ${owned ? 'owned' : 'missing'} rarity-${a.rarity}`;
         el.innerHTML = `
             <div class="art-icon">${owned ? a.icon : '❓'}</div>
             <div class="art-info">
                 <div class="art-name">${owned ? a.name : 'Unknown Artifact'}</div>
                 <div class="art-desc">${owned ? a.desc : 'Keep clicking to discover...'}</div>
+                <div class="art-rarity ${a.rarity}">${a.rarity.toUpperCase()}</div>
             </div>
         `;
         DOM.artifactGrid.appendChild(el);
