@@ -1,141 +1,106 @@
 <!DOCTYPE html>
 <html lang="bg">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EvoGenesis: Еволюционен Кликър</title>
+    <title>EvoGenesis: Idle Clicker</title>
     <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
-    <div class="app">
-        <!-- ═══ HEADER ═══ -->
-        <header class="header">
-            <div class="stage-badge">
-                <span class="stage-icon" id="stage-icon">🌊</span>
-                <div>
-                    <small class="stage-label">Етап на еволюция</small>
-                    <div class="stage-name" id="stage-name">Примордиална супа</div>
-                </div>
+    <div class="app-container">
+        <!-- Горна част: Ресурси и Етап -->
+        <header class="top-bar">
+            <div class="evolution-info">
+                <h2>Етап: <span id="stage-name">Едноклетъчно</span></h2>
             </div>
-            <div class="currencies">
-                <div class="curr dna-c">
-                    <span class="curr-ico">🧬</span>
-                    <div><small>ДНК Точки</small><div class="curr-val" id="dna-val">0</div></div>
+            <div class="resources">
+                <div class="resource-box a-theme">
+                    <span class="res-label">Аденин (A)</span>
+                    <span class="res-value" id="res-A">0</span>
                 </div>
-                <div class="curr mut-c hidden" id="mut-box">
-                    <span class="curr-ico">🧪</span>
-                    <div><small>Мутации</small><div class="curr-val" id="mut-val">0</div></div>
+                <div class="resource-box t-theme">
+                    <span class="res-label">Тимин (T)</span>
+                    <span class="res-value" id="res-T">0</span>
                 </div>
-                <div class="curr gen-c hidden" id="gen-box">
-                    <span class="curr-ico">🔬</span>
-                    <div><small>Геноми</small><div class="curr-val" id="gen-val">0</div></div>
+                <div class="resource-box g-theme">
+                    <span class="res-label">Гуанин (G)</span>
+                    <span class="res-value" id="res-G">0</span>
                 </div>
-            </div>
-            <div class="toolbar">
-                <button class="tb-btn" id="btn-help" title="Как се играе">❓</button>
-                <button class="tb-btn" id="btn-stats" title="Статистика">📊</button>
-                <button class="tb-btn" id="btn-ach" title="Постижения">🏆</button>
-                <button class="tb-btn" id="btn-settings" title="Настройки">⚙️</button>
+                <div class="resource-box c-theme">
+                    <span class="res-label">Цитозин (C)</span>
+                    <span class="res-value" id="res-C">0</span>
+                </div>
             </div>
         </header>
 
-        <!-- ═══ EVENT BANNER ═══ -->
-        <div class="event-banner hidden" id="event-banner">
-            <span class="ev-ico">⚡</span>
-            <span class="ev-text" id="event-text">ДНК Вълна! ×3 производство за 30 сек!</span>
-            <span class="ev-timer" id="event-timer">30с</span>
-        </div>
-
-        <!-- ═══ MAIN ═══ -->
-        <main class="main">
-            <!-- LEFT: Clicker -->
-            <section class="clicker">
-                <div class="organism" id="organism">🌊</div>
-                <button class="click-btn" id="click-btn">
-                    <span class="cb-emoji">🧬</span>
-                    <span class="cb-label">КЛИКНИ</span>
-                    <span class="cb-sub" id="click-sub">+1 ДНК</span>
-                </button>
-
+        <main class="game-area">
+            <!-- Лява част: Кликър (ДНК) -->
+            <section class="clicker-panel">
+                <button id="dna-btn" class="dna-button">🧬</button>
                 <div class="stats">
-                    <div class="stat"><span>ДНК/клик</span><strong id="s-click">1</strong></div>
-                    <div class="stat"><span>ДНК/сек</span><strong id="s-dps">0</strong></div>
-                    <div class="stat"><span>Множител</span><strong id="s-mult">×1.00</strong></div>
-                    <div class="stat"><span>Общо ДНК</span><strong id="s-total">0</strong></div>
-                </div>
-
-                <div class="evo-section">
-                    <div class="evo-bar-wrap">
-                        <div class="evo-bar-label">
-                            <span>Прогрес към еволюция</span>
-                            <span id="evo-text">0 / 1,000</span>
-                        </div>
-                        <div class="evo-bar"><div class="evo-fill" id="evo-fill"></div></div>
-                    </div>
-                    <button class="rb-btn evo-btn" id="evo-btn" disabled>
-                        🧬 Еволюирай!
-                        <small id="evo-info">Нужни: 1,000 ДНК</small>
-                    </button>
-                    <button class="rb-btn leap-btn hidden" id="leap-btn" disabled>
-                        🔬 Геномен скок!
-                        <small id="leap-info">Нужни: 5 еволюции</small>
-                    </button>
+                    <p>Добив при клик: <strong id="stat-click">1.0</strong> на база</p>
+                    <p>Пасивен доход: <strong id="stat-bps">0.0</strong> на база/сек</p>
+                    <p>Глобален множител: <strong id="stat-mult">x1.00</strong></p>
                 </div>
             </section>
 
-            <!-- RIGHT: Shop -->
-            <aside class="shop">
-                <div class="tabs">
-                    <button class="tab active" data-tab="t-dna">🧬 ДНК</button>
-                    <button class="tab locked" data-tab="t-mut" id="tab-mut">🔒 Мутации</button>
-                    <button class="tab locked" data-tab="t-gen" id="tab-gen">🔒 Геноми</button>
+            <!-- Дясна част: Магазин / Ъпгрейди -->
+            <aside class="store-panel">
+                <h3>Еволюционен магазин</h3>
+                <div class="upgrades">
+
+                    <!-- A-Upgrade -->
+                    <button id="upg-A" class="upgrade-btn a-theme">
+                        <div class="upg-header">Сила на клика (A)</div>
+                        <div class="upg-desc">Увеличава базовия добив при ръчен клик.</div>
+                        <div class="upg-meta">
+                            <span>Ниво: <span id="lvl-A">0</span></span>
+                            <span>Цена: <strong id="cost-A">10</strong> A</span>
+                        </div>
+                    </button>
+
+                    <!-- T-Upgrade -->
+                    <button id="upg-T" class="upgrade-btn t-theme">
+                        <div class="upg-header">Авто-кликър (T)</div>
+                        <div class="upg-desc">Генерира бази автоматично всяка секунда.</div>
+                        <div class="upg-meta">
+                            <span>Ниво: <span id="lvl-T">0</span></span>
+                            <span>Цена: <strong id="cost-T">10</strong> T</span>
+                        </div>
+                    </button>
+
+                    <!-- G-Upgrade -->
+                    <button id="upg-G" class="upgrade-btn g-theme">
+                        <div class="upg-header">Мултипликатор (G)</div>
+                        <div class="upg-desc">+15% към цялото производство (кликове и пасивно).</div>
+                        <div class="upg-meta">
+                            <span>Ниво: <span id="lvl-G">0</span></span>
+                            <span>Цена: <strong id="cost-G">15</strong> G</span>
+                        </div>
+                    </button>
+
+                    <!-- C-Upgrade -->
+                    <button id="upg-C" class="upgrade-btn c-theme">
+                        <div class="upg-header">Еволюционен скок (C)</div>
+                        <div class="upg-desc">Премини към следващия етап на живот!</div>
+                        <div class="upg-meta">
+                            <span id="c-status">Следващ етап</span>
+                            <span>Цена: <strong id="cost-C">50</strong> C</span>
+                        </div>
+                    </button>
+
                 </div>
-                <div class="buy-qty">
-                    <span class="bq-label">Купи:</span>
-                    <button class="bq active" data-qty="1">×1</button>
-                    <button class="bq" data-qty="10">×10</button>
-                    <button class="bq" data-qty="25">×25</button>
-                    <button class="bq" data-qty="max">Макс</button>
-                </div>
-                <div class="tab-page active" id="t-dna"></div>
-                <div class="tab-page" id="t-mut"></div>
-                <div class="tab-page" id="t-gen"></div>
             </aside>
         </main>
 
-        <!-- ═══ EVOLUTION TIMELINE ═══ -->
-        <div class="timeline-wrap">
-            <div class="timeline" id="timeline"></div>
-        </div>
-
-        <!-- ═══ FOOTER ═══ -->
-        <footer class="footer">
-            <div class="f-stats">
-                Еволюции: <strong id="f-evo">0</strong> &nbsp;|&nbsp;
-                Геномни скокове: <strong id="f-leap">0</strong> &nbsp;|&nbsp;
-                <span id="f-playtime">Време: 0 мин</span>
-            </div>
-            <div class="f-right">
-                <button class="reset-btn" id="reset-btn">🗑️ Изтрий прогреса</button>
-            </div>
+        <footer>
+            <button id="reset-btn" class="reset-button">Изтрий запазената игра</button>
         </footer>
     </div>
 
-    <!-- ═══ MODALS ═══ -->
-    <div class="modal-overlay hidden" id="modal-overlay">
-        <div class="modal" id="modal">
-            <div class="modal-header">
-                <h2 id="modal-title">Заглавие</h2>
-                <button class="modal-close" id="modal-close">✕</button>
-            </div>
-            <div class="modal-body" id="modal-body"></div>
-        </div>
-    </div>
-
-    <!-- ═══ TOASTS ═══ -->
-    <div class="toast-container" id="toasts"></div>
-
-    <div class="floats" id="floats"></div>
     <script src="script.js"></script>
 </body>
+
 </html>
