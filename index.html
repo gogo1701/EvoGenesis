@@ -1,84 +1,96 @@
 <!DOCTYPE html>
-<html lang="bg">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EvoGenesis: Еволюционен Кликър</title>
+    <title>EvoGenesis: Evolutionary Clicker</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <div id="bg-container">
+        <div class="bg-layer layer-soup"></div>
+        <div class="bg-layer layer-land"></div>
+        <div class="bg-layer layer-galactic"></div>
+    </div>
     <div class="app">
         <!-- ═══ HEADER ═══ -->
         <header class="header">
             <div class="stage-badge">
                 <span class="stage-icon" id="stage-icon">🌊</span>
                 <div>
-                    <small class="stage-label">Етап на еволюция</small>
-                    <div class="stage-name" id="stage-name">Примордиална супа</div>
+                    <small class="stage-label">Evolution Stage</small>
+                    <div class="stage-name" id="stage-name">Primordial Soup</div>
                 </div>
             </div>
             <div class="currencies">
                 <div class="curr dna-c">
                     <span class="curr-ico">🧬</span>
-                    <div><small>ДНК Точки</small><div class="curr-val" id="dna-val">0</div></div>
+                    <div><small>DNA Points</small><div class="curr-val" id="dna-val">0</div></div>
                 </div>
                 <div class="curr mut-c hidden" id="mut-box">
                     <span class="curr-ico">🧪</span>
-                    <div><small>Мутации</small><div class="curr-val" id="mut-val">0</div></div>
+                    <div><small>Mutations</small><div class="curr-val" id="mut-val">0</div></div>
                 </div>
                 <div class="curr gen-c hidden" id="gen-box">
                     <span class="curr-ico">🔬</span>
-                    <div><small>Геноми</small><div class="curr-val" id="gen-val">0</div></div>
+                    <div><small>Genomes</small><div class="curr-val" id="gen-val">0</div></div>
                 </div>
             </div>
             <div class="toolbar">
-                <button class="tb-btn" id="btn-help" title="Как се играе">❓</button>
-                <button class="tb-btn" id="btn-stats" title="Статистика">📊</button>
-                <button class="tb-btn" id="btn-ach" title="Постижения">🏆</button>
-                <button class="tb-btn" id="btn-settings" title="Настройки">⚙️</button>
+                <button class="tb-btn" id="btn-help" title="How to Play">❓</button>
+                <button class="tb-btn" id="btn-stats" title="Statistics">📊</button>
+                <button class="tb-btn" id="btn-ach" title="Achievements">🏆</button>
+                <button class="tb-btn" id="btn-settings" title="Settings">⚙️</button>
             </div>
         </header>
 
         <!-- ═══ EVENT BANNER ═══ -->
-        <div class="event-banner hidden" id="event-banner">
+        <section class="event-banner hidden" id="event-banner">
             <span class="ev-ico">⚡</span>
-            <span class="ev-text" id="event-text">ДНК Вълна! ×3 производство за 30 сек!</span>
-            <span class="ev-timer" id="event-timer">30с</span>
-        </div>
+            <span class="ev-text" id="event-text">DNA Wave! ×3 production for 30s!</span>
+            <span class="ev-timer" id="event-timer">30s</span>
+        </section>
 
         <!-- ═══ MAIN ═══ -->
         <main class="main">
             <!-- LEFT: Clicker -->
             <section class="clicker">
                 <div class="organism" id="organism">🌊</div>
-                <button class="click-btn" id="click-btn">
-                    <span class="cb-emoji">🧬</span>
-                    <span class="cb-label">КЛИКНИ</span>
-                    <span class="cb-sub" id="click-sub">+1 ДНК</span>
+                <button class="click-btn" id="click-btn" aria-label="Generate DNA">
+                    <div class="core-layer core-1"></div>
+                    <div class="core-layer core-2"></div>
+                    <div class="core-layer core-3"></div>
+                    <div class="cb-info">
+                        <span class="cb-label">GENERATE</span>
+                        <span class="cb-sub" id="click-sub">+1 DNA</span>
+                    </div>
                 </button>
 
                 <div class="stats">
-                    <div class="stat"><span>ДНК/клик</span><strong id="s-click">1</strong></div>
-                    <div class="stat"><span>ДНК/сек</span><strong id="s-dps">0</strong></div>
-                    <div class="stat"><span>Множител</span><strong id="s-mult">×1.00</strong></div>
-                    <div class="stat"><span>Общо ДНК</span><strong id="s-total">0</strong></div>
+                    <div class="stat"><span>DNA/click</span><strong id="s-click">1</strong></div>
+                    <div class="stat"><span>DNA/sec</span><strong id="s-dps">0</strong></div>
+                    <div class="stat"><span>Multiplier</span><strong id="s-mult">×1.00</strong></div>
+                    <div class="stat"><span>Total DNA</span><strong id="s-total">0</strong></div>
                 </div>
 
                 <div class="evo-section">
                     <div class="evo-bar-wrap">
                         <div class="evo-bar-label">
-                            <span>Прогрес към еволюция</span>
+                            <span>Progress to Evolution</span>
                             <span id="evo-text">0 / 1,000</span>
                         </div>
                         <div class="evo-bar"><div class="evo-fill" id="evo-fill"></div></div>
                     </div>
                     <button class="rb-btn evo-btn" id="evo-btn" disabled>
-                        🧬 Еволюирай!
-                        <small id="evo-info">Нужни: 1,000 ДНК</small>
+                        🧬 Evolution Leap!
+                        <small id="evo-info">Required: 1,000 DNA</small>
                     </button>
                     <button class="rb-btn leap-btn hidden" id="leap-btn" disabled>
-                        🔬 Геномен скок!
-                        <small id="leap-info">Нужни: 5 еволюции</small>
+                        🔬 Genomic Leap!
+                        <small id="leap-info">Required: 5 evolutions</small>
                     </button>
                 </div>
             </section>
@@ -86,37 +98,48 @@
             <!-- RIGHT: Shop -->
             <aside class="shop">
                 <div class="tabs">
-                    <button class="tab active" data-tab="t-dna">🧬 ДНК</button>
-                    <button class="tab locked" data-tab="t-mut" id="tab-mut">🔒 Мутации</button>
-                    <button class="tab locked" data-tab="t-gen" id="tab-gen">🔒 Геноми</button>
+                    <button class="tab active" data-tab="t-dna">🧬 DNA</button>
+                    <button class="tab locked" data-tab="t-mut" id="tab-mut">🧪 Mutations</button>
+                    <button class="tab locked" data-tab="t-tree" id="tab-tree">🌿 Skill Tree</button>
+                    <button class="tab locked" data-tab="t-gen" id="tab-gen">🔬 Genomes</button>
+                    <button class="tab" data-tab="t-col" id="tab-col">🏆 Collection</button>
                 </div>
                 <div class="buy-qty">
-                    <span class="bq-label">Купи:</span>
+                    <span class="bq-label">Buy:</span>
                     <button class="bq active" data-qty="1">×1</button>
                     <button class="bq" data-qty="10">×10</button>
                     <button class="bq" data-qty="25">×25</button>
-                    <button class="bq" data-qty="max">Макс</button>
+                    <button class="bq" data-qty="max">Max</button>
+                    <button id="btn-buy-all" class="buy-all-btn" title="Buy all affordable DNA upgrades">⚡ Buy All</button>
                 </div>
                 <div class="tab-page active" id="t-dna"></div>
                 <div class="tab-page" id="t-mut"></div>
+                <div class="tab-page" id="t-tree"></div>
                 <div class="tab-page" id="t-gen"></div>
+                <div class="tab-page" id="t-col">
+                    <div class="section-header">
+                        <h3>Artifact Collection</h3>
+                        <p>Rare items discovered through evolution</p>
+                    </div>
+                    <div id="artifact-grid" class="artifact-grid"></div>
+                </div>
             </aside>
         </main>
 
         <!-- ═══ EVOLUTION TIMELINE ═══ -->
-        <div class="timeline-wrap">
+        <section class="timeline-wrap" aria-label="Evolution Timeline">
             <div class="timeline" id="timeline"></div>
-        </div>
+        </section>
 
         <!-- ═══ FOOTER ═══ -->
         <footer class="footer">
             <div class="f-stats">
-                Еволюции: <strong id="f-evo">0</strong> &nbsp;|&nbsp;
-                Геномни скокове: <strong id="f-leap">0</strong> &nbsp;|&nbsp;
-                <span id="f-playtime">Време: 0 мин</span>
+                Evolution Leaps: <strong id="f-evo">0</strong> &nbsp;|&nbsp;
+                Genomic Leaps: <strong id="f-leap">0</strong> &nbsp;|&nbsp;
+                <span id="f-playtime">Time: 0 min</span>
             </div>
             <div class="f-right">
-                <button class="reset-btn" id="reset-btn">🗑️ Изтрий прогреса</button>
+                <button class="reset-btn" id="reset-btn">🗑️ Reset Progress</button>
             </div>
         </footer>
     </div>
@@ -125,7 +148,7 @@
     <div class="modal-overlay hidden" id="modal-overlay">
         <div class="modal" id="modal">
             <div class="modal-header">
-                <h2 id="modal-title">Заглавие</h2>
+                <h2 id="modal-title">Title</h2>
                 <button class="modal-close" id="modal-close">✕</button>
             </div>
             <div class="modal-body" id="modal-body"></div>

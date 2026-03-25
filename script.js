@@ -1,81 +1,250 @@
 /* ═══════════════════════════════════════════════════
-   EvoGenesis — Еволюционен Кликър  v3
+   EvoGenesis — Evolutionary Clicker  v3
    Achievements · Events · Stats · Tutorial · Timeline
    ═══════════════════════════════════════════════════ */
 
-// ─── КОНФИГУРАЦИЯ ─────────────────────────────────
+// ─── CONFIGURATION ─────────────────────────────────
 const STAGES = [
-    { name: 'Примордиална супа', icon: '🌊' },
-    { name: 'Прокариот',         icon: '🦠' },
-    { name: 'Еукариот',          icon: '🔬' },
-    { name: 'Многоклетъчно',     icon: '🧫' },
-    { name: 'Безгръбначно',      icon: '🪱' },
-    { name: 'Риба',              icon: '🐟' },
-    { name: 'Земноводно',        icon: '🐸' },
-    { name: 'Влечуго',           icon: '🦎' },
-    { name: 'Бозайник',          icon: '🐭' },
-    { name: 'Примат',            icon: '🐵' },
-    { name: 'Човек',             icon: '🧑' },
-    { name: 'Трансхуман',        icon: '✨' },
+    { name: 'Primordial Soup', icon: '🌊' },
+    { name: 'Prokaryote',      icon: '🦠' },
+    { name: 'Eukaryote',       icon: '🔬' },
+    { name: 'Multicellular',   icon: '🧫' },
+    { name: 'Invertebrate',    icon: '🪱' },
+    { name: 'Fish',            icon: '🐟' },
+    { name: 'Amphibian',       icon: '🐸' },
+    { name: 'Reptile',         icon: '🦎' },
+    { name: 'Mammal',          icon: '🐭' },
+    { name: 'Primate',         icon: '🐵' },
+    { name: 'Human',           icon: '🧑' },
+    { name: 'Transhuman',      icon: '✨' },
+    { name: 'Galactic Entity', icon: '🌌' },
+    { name: 'Universal Mind',  icon: '🧠' },
+    { name: 'Omnipotence',     icon: '♾️' },
+];
+
+const TRAITS = [
+    { id: 't1', name: 'Rapid Metabolism', desc: '+50% Click Power', cost: 10, type: 'Predator', check: (G) => G.evoCount >= 2 },
+    { id: 't2', name: 'Symbiotic Bond', desc: '+40% Passive Income', cost: 10, type: 'Herbivore', check: (G) => G.evoCount >= 2 },
+    { id: 't3', name: 'Apex Instinct', desc: 'Critical Hits now do 5x damage', cost: 50, type: 'Predator', check: (G) => G.traits.t1 },
+    { id: 't4', name: 'Ancient Resilience', desc: '-20% Upgrade Costs', cost: 50, type: 'Herbivore', check: (G) => G.traits.t2 }
 ];
 
 const DNA_UPG = [
-    { id:'replicase',    name:'🔄 Репликаза',          desc:'Увеличава силата на клик с +1 ДНК.',                 base:10,    g:1.15 },
-    { id:'ribosome',     name:'🏭 Рибозома',           desc:'Произвежда +0.5 ДНК на секунда.',                    base:50,    g:1.18 },
-    { id:'mitochondria', name:'⚡ Митохондрия',         desc:'Произвежда +3 ДНК на секунда.',                      base:500,   g:1.22 },
-    { id:'enzyme',       name:'🧪 Ензимен комплекс',   desc:'×1.25 към цялото производство.',                     base:2000,  g:1.80 },
-    { id:'division',     name:'🔬 Клетъчно делене',    desc:'×1.50 към цялото производство.',                     base:10000, g:2.20 },
+    { id:'replicase',    name:'🔄 Replicase',         desc:'A primitive enzyme that makes DNA self-copy — each click grows stronger.',             base:10,    g:1.15 },
+    { id:'ribosome',     name:'🏭 Ribosome',           desc:'Tiny cellular factories that quietly accumulate DNA/sec, even while idle.',            base:50,    g:1.18 },
+    { id:'mitochondria', name:'⚡ Mitochondria',        desc:'The powerhouses of life — convert chaos into a steady stream of DNA.',                base:500,   g:1.22 },
+    { id:'enzyme',       name:'🧪 Enzyme Complex',     desc:'Mysterious complexes that accelerate every reaction — multiply all your production.', base:2000,  g:1.80 },
+    { id:'division',     name:'🔬 Cell Division',      desc:'Cells divide relentlessly — each level explosively multiplies DNA/click and DNA/sec.',base:10000, g:2.20 },
 ];
 const MUT_UPG = [
-    { id:'adaptation',    name:'🛡️ Адаптация',            desc:'Започваш с +100 ДНК след еволюция на ниво.',         base:2,  g:1.80 },
-    { id:'mutagenesis',   name:'☢️ Мутагенеза',            desc:'+30% постоянен бонус към клик на ниво.',             base:3,  g:2.00 },
-    { id:'geneExpr',      name:'📖 Генна експресия',       desc:'+30% постоянен бонус към авто-ДНК/сек на ниво.',     base:3,  g:2.00 },
-    { id:'chromosome',    name:'🧬 Хромозомно удвояване',  desc:'+25% повече мутации при еволюция на ниво.',          base:5,  g:2.50 },
-    { id:'selection',     name:'🎯 Естествен подбор',      desc:'-5% цена на ДНК ъпгрейди на ниво (макс -50%).',      base:4,  g:2.00, max:10 },
+    { id:'adaptation',    name:'🛡️ Adaptation',           desc:'Your species learns to survive — start each run with bonus starting DNA.',             base:2,  g:1.80 },
+    { id:'mutagenesis',   name:'☢️ Mutagenesis',            desc:'Cosmic radiation and chaos — a permanent bonus making every click more powerful.',     base:3,  g:2.00 },
+    { id:'geneExpr',      name:'📖 Gene Expression',       desc:'Your genes awaken — passive sources produce an ever-stronger flow of DNA/sec.',       base:3,  g:2.00 },
+    { id:'chromosome',    name:'🧬 Chromosome Doubling',   desc:'Chromosomes copy and rearrange — each evolution grants more mutations.',              base:5,  g:2.50 },
+    { id:'selection',     name:'🎯 Natural Selection',     desc:'The weak fall, the strong survive — a permanent discount on DNA upgrade costs.',      base:4,  g:2.00, max:10 },
 ];
 const GEN_UPG = [
-    { id:'cambrian',      name:'💥 Камбрийска експлозия',  desc:'×2 цялото производство на ниво.',                    base:1,  g:3.0 },
-    { id:'symbiogenesis',  name:'🤝 Симбиогенеза',          desc:'+50% мутации при еволюция на ниво.',                base:2,  g:3.0 },
-    { id:'epigenetics',   name:'🔮 Епигенетика',           desc:'-15% цена на мутационни ъпгрейди (макс -60%).',      base:3,  g:4.0, max:4 },
-    { id:'engineering',   name:'⚙️ Генно инженерство',     desc:'Започваш с +2 мутации след геномен скок на ниво.',   base:5,  g:5.0 },
+    { id:'cambrian',      name:'💥 Cambrian Explosion',    desc:'An explosion of life forms — each level doubles all your production.',                base:1,  g:3.0 },
+    { id:'symbiogenesis',  name:'🤝 Symbiogenesis',         desc:'Organisms merge into new hybrids — evolutions grant increasingly more mutations.',   base:2,  g:3.0 },
+    { id:'epigenetics',   name:'🔮 Epigenetics',            desc:'Memories encoded in DNA — mutation upgrades become cheaper over time.',               base:3,  g:4.0, max:4 },
+    { id:'engineering',   name:'⚙️ Genetic Engineering',    desc:'Consciously rewrite your own genome — new cycles start with bonus mutations.',       base:5,  g:5.0 },
+];
+
+// ─── EVOLUTION SKILL TREE ─────────────────────
+// Every node requires cx, cy offsets for the vertical grid. Left branches use negative cx, right branches positive.
+const evolutionTree = [
+    { id:'evo_root',      name:'Cellular Memory',    icon:'🧠', dnaCost: 500,    requirement: null,        type:'Click Power',  effectValue: 1, cx: 0, cy: 9 },
+    
+    // Middle spine
+    { id:'evo_click2',    name:'Synaptic Impulse',   icon:'⚡', dnaCost: 2500,   requirement: 'evo_root',  type:'Click Power',  effectValue: 2, cx: 0, cy: 8 },
+    { id:'evo_click3',    name:'Neural Network',     icon:'🕸️', dnaCost: 15000,  requirement: 'evo_click2',type:'Click Power',  effectValue: 5, cx: 0, cy: 7 },
+    { id:'evo_enzyme_eff',name:'Enzyme Efficiency', icon:'🧪', dnaCost: 100000, requirement: 'evo_click3',type:'Cost Reduction',effectValue: 0.15, cx: 0, cy: 6 },
+
+    // Left broad passive branch
+    { id:'evo_passive1',  name:'Basal Metabolism',   icon:'♨️', dnaCost: 2000,   requirement: 'evo_root',  type:'Passive DNA',  effectValue: 1, cx: -2, cy: 8 },
+    { id:'evo_passive2',  name:'Tissue Diffusion',   icon:'🩸', dnaCost: 10000,  requirement: 'evo_passive1', type:'Passive DNA',effectValue: 3, cx: -2, cy: 7 },
+    { id:'evo_extremophile',name:'Extremophile',     icon:'🌋', dnaCost: 45000,  requirement: 'evo_passive2', type:'Passive DNA', effectValue: 15, cx: -3, cy: 6 },
+    { id:'evo_tardigrade', name:'Indestructibility', icon:'🐻', dnaCost: 150000, requirement: 'evo_extremophile', type:'Multiplier', effectValue: 0.50, cx: -3, cy: 5 },
+
+    // Right broad multiplier branch
+    { id:'evo_multi1',    name:'Symbiotic Bonds',    icon:'🤝', dnaCost: 8000,   requirement: 'evo_root',  type:'Multiplier',   effectValue: 0.10, cx: 2, cy: 8 },
+    { id:'evo_multi2',    name:'Complex Organs',     icon:'🫀', dnaCost: 40000,  requirement: 'evo_multi1',  type:'Multiplier', effectValue: 0.20, cx: 2, cy: 7 },
+    { id:'evo_hive_mind', name:'Hive Mind',          icon:'🐝', dnaCost: 85000,  requirement: 'evo_multi2', type:'Multiplier', effectValue: 0.35, cx: 3, cy: 6 },
+    { id:'evo_collective',name:'Collective Genius',  icon:'🌌', dnaCost: 350000, requirement: 'evo_hive_mind', type:'Multiplier', effectValue: 0.75, cx: 3, cy: 5 },
+
+    // Core Branching: Predator vs Herbivore (diet path)
+    { id:'evo_path_predator',   name:'Path of the Predator',   icon:'🐅',  dnaCost: 30000,  requirement: 'evo_click3',   type:'Multiplier', effectValue: 0.25, pathGroup:'diet', cx: -1, cy: 5 },
+    { id:'evo_path_herbivore',  name:'Path of the Herbivore',  icon:'🦕',  dnaCost: 30000,  requirement: 'evo_click3',   type:'Multiplier', effectValue: 0.25, pathGroup:'diet', cx: 1, cy: 5 },
+
+    { id:'evo_predator_claws',  name:'Bony Jaws',            icon:'🦷', dnaCost: 90000,  requirement: 'evo_path_predator',  type:'Click Power',  effectValue: 15, pathGroup:'diet', cx: -1, cy: 4 },
+    { id:'evo_predator_pack',   name:'Wolf Pack',            icon:'🐺', dnaCost: 250000, requirement: 'evo_predator_claws', type:'Multiplier',   effectValue: 0.40, pathGroup:'diet', cx: -1, cy: 3 },
+    { id:'evo_predator_apex',   name:'Apex Predator',        icon:'🦈', dnaCost: 750000, requirement: 'evo_predator_pack', type:'Click Power', effectValue: 100, pathGroup:'diet', cx: -1, cy: 2 },
+
+    { id:'evo_herbivore_grazer',name:'Insatiable Hoarder',   icon:'🦥', dnaCost: 90000,  requirement: 'evo_path_herbivore', type:'Passive DNA',  effectValue: 6, pathGroup:'diet', cx: 1, cy: 4 },
+    { id:'evo_herbivore_herd',  name:'Herd Instinct',        icon:'🐘', dnaCost: 250000, requirement: 'evo_herbivore_grazer', type:'Multiplier',   effectValue: 0.40, pathGroup:'diet', cx: 1, cy: 3 },
+    { id:'evo_herbivore_titan', name:'Colossal Titan',       icon:'🦕', dnaCost: 750000, requirement: 'evo_herbivore_herd', type:'Passive DNA', effectValue: 50, pathGroup:'diet', cx: 1, cy: 2 },
+
+    // The Convergence
+    { id:'evo_apex',            name:'Evolutionary Pinnacle',icon:'🦅', dnaCost: 2000000, requirement: ['evo_predator_apex', 'evo_herbivore_titan', 'evo_tardigrade', 'evo_collective', 'evo_enzyme_eff'], type:'Multiplier', effectValue: 1.50, cx: 0, cy: 1 },
+
+    // THE BEST UPGRADE EVER
+    { id:'evo_ultimate',        name:'Omnipotence',          icon:'✨', dnaCost: 15000000, requirement: 'evo_apex', type:'Ultimate', isUltimate: true, effectValue: 9.00, cx: 0, cy: 0 },
 ];
 
 // ─── ПОСТИЖЕНИЯ (Achievements) ───────────────────
 const ACHIEVEMENTS = [
-    { id:'click1',     name:'Първа молекула',     desc:'Направи първия си клик.',           icon:'👆', check: g => g.totalClicks >= 1 },
-    { id:'click100',   name:'Начален организъм',  desc:'100 клика.',                        icon:'🖱️', check: g => g.totalClicks >= 100 },
-    { id:'click1k',    name:'Усърдна репликация',  desc:'1,000 клика.',                     icon:'⚡', check: g => g.totalClicks >= 1000 },
-    { id:'click10k',   name:'Вечен кликър',        desc:'10,000 клика.',                    icon:'💎', check: g => g.totalClicks >= 10000 },
-    { id:'dna100',     name:'Първи нуклеотиди',   desc:'Натрупай 100 ДНК.',                 icon:'🧬', check: g => g.allTimeDNA >= 100 },
-    { id:'dna10k',     name:'ДНК библиотека',     desc:'Натрупай 10,000 ДНК общо.',         icon:'📚', check: g => g.allTimeDNA >= 10000 },
-    { id:'dna1m',      name:'Генетична мощ',       desc:'Натрупай 1,000,000 ДНК общо.',     icon:'🔥', check: g => g.allTimeDNA >= 1e6 },
-    { id:'dna1b',      name:'Геномен архив',       desc:'Натрупай 1,000,000,000 ДНК общо.', icon:'🌟', check: g => g.allTimeDNA >= 1e9 },
-    { id:'dps10',      name:'Автоматизация',       desc:'Достигни 10 ДНК/сек.',             icon:'🏭', check: g => dps() >= 10 },
-    { id:'dps100',     name:'Био-фабрика',         desc:'Достигни 100 ДНК/сек.',            icon:'⚙️', check: g => dps() >= 100 },
-    { id:'dps1k',      name:'Индустриализация',    desc:'Достигни 1,000 ДНК/сек.',          icon:'🏗️', check: g => dps() >= 1000 },
-    { id:'evo1',       name:'Първа еволюция',     desc:'Еволюирай за пръв път.',            icon:'🌱', check: g => g.evoCount >= 1 },
-    { id:'evo3',       name:'Адаптивен вид',       desc:'Еволюирай 3 пъти.',               icon:'🌿', check: g => g.evoCount >= 3 },
-    { id:'evo5',       name:'Доминиращ организъм', desc:'Еволюирай 5 пъти.',               icon:'🌳', check: g => g.evoCount >= 5 },
-    { id:'evo10',      name:'Мастър на еволюцията',desc:'Еволюирай 10 пъти.',              icon:'👑', check: g => g.evoCount >= 10 },
-    { id:'leap1',      name:'Геномен пионер',     desc:'Направи първия геномен скок.',      icon:'🚀', check: g => g.leapCount >= 1 },
-    { id:'leap3',      name:'Генетичен магнат',     desc:'Направи 3 геномни скока.',        icon:'🔬', check: g => g.leapCount >= 3 },
-    { id:'frenzy1',    name:'Космическа радиация', desc:'Преживей първата ДНК вълна.',      icon:'☄️', check: g => g.totalFrenzies >= 1 },
-    { id:'frenzy5',    name:'Ветеран на вълните',  desc:'Преживей 5 ДНК вълни.',            icon:'🌊', check: g => g.totalFrenzies >= 5 },
-    { id:'rich',       name:'Мутантен колекционер', desc:'Притежавай 50 мутации наведнъж.',  icon:'🧪', check: g => g.mutations >= 50 },
-    { id:'win',        name:'Трансхуман',           desc:'Достигни последния етап.',         icon:'✨', check: g => g.hasWon },
+    { id:'click1',     name:'First Molecule',     desc:'Make your first click.',           icon:'👆', check: g => g.totalClicks >= 1 },
+    { id:'click100',   name:'Initial Organism',  desc:'100 clicks.',                        icon:'🖱️', check: g => g.totalClicks >= 100 },
+    { id:'click1k',    name:'Diligent Replication',  desc:'1,000 clicks.',                     icon:'⚡', check: g => g.totalClicks >= 1000 },
+    { id:'click10k',   name:'Eternal Clicker',        desc:'10,000 clicks.',                    icon:'💎', check: g => g.totalClicks >= 10000 },
+    { id:'dna100',     name:'First Nucleotides',   desc:'Accumulate 100 DNA.',                 icon:'🧬', check: g => g.allTimeDNA >= 100 },
+    { id:'dna10k',     name:'DNA Library',     desc:'Accumulate 10,000 DNA total.',         icon:'📚', check: g => g.allTimeDNA >= 10000 },
+    { id:'dna1m',      name:'Genetic Power',       desc:'Accumulate 1,000,000 DNA total.',     icon:'🔥', check: g => g.allTimeDNA >= 1e6 },
+    { id:'dna1b',      name:'Genome Archive',       desc:'Accumulate 1,000,000,000 DNA total.', icon:'🌟', check: g => g.allTimeDNA >= 1e9 },
+    { id:'dps10',      name:'Automation',       desc:'Reach 10 DNA/sec.',             icon:'🏭', check: g => dps() >= 10 },
+    { id:'dps100',     name:'Bio-factory',         desc:'Reach 100 DNA/sec.',            icon:'⚙️', check: g => dps() >= 100 },
+    { id:'dps1k',      name:'Industrialization',    desc:'Reach 1,000 DNA/sec.',          icon:'🏗️', check: g => dps() >= 1000 },
+    { id:'evo1',       name:'First Evolution',     desc:'Evolve for the first time.',            icon:'🌱', check: g => g.evoCount >= 1 },
+    { id:'evo3',       name:'Adaptive Species',       desc:'Evolve 3 times.',               icon:'🌿', check: g => g.evoCount >= 3 },
+    { id:'evo5',       name:'Dominant Organism', desc:'Evolve 5 times.',               icon:'🌳', check: g => g.evoCount >= 5 },
+    { id:'evo10',      name:'Master of Evolution',desc:'Evolve 10 times.',              icon:'👑', check: g => g.evoCount >= 10 },
+    { id:'leap1',      name:'Genomic Pioneer',     desc:'Make your first genomic leap.',      icon:'🚀', check: g => g.leapCount >= 1 },
+    { id:'leap3',      name:'Genetic Tycoon',     desc:'Make 3 genomic leaps.',        icon:'🔬', check: g => g.leapCount >= 3 },
+    { id:'frenzy1',    name:'Cosmic Radiation', desc:'Survive your first DNA wave.',      icon:'☄️', check: g => g.totalFrenzies >= 1 },
+    { id:'frenzy5',    name:'Wave Veteran',  desc:'Survive 5 DNA waves.',            icon:'🌊', check: g => g.totalFrenzies >= 5 },
+    { id:'rich',       name:'Mutant Collector', desc:'Hold 50 mutations at once.',  icon:'🧪', check: g => g.mutations >= 50 },
+    { id:'win',        name:'Transhuman',           desc:'Reach the final stage.',         icon:'✨', check: g => g.hasWon },
+];
+
+const ARTIFACTS = [
+    { id: 'a1', name: 'Fossilized Bone', icon: '🦴', desc: '+10% Click Power', effect: (G) => ({ clickMult: 1.1 }) },
+    { id: 'a2', name: 'Amber Mosquito', icon: '🦟', desc: '+10% Passive Income', effect: (G) => ({ dpsMult: 1.1 }) },
+    { id: 'a3', name: 'Crystalized Nucleus', icon: '💎', desc: '+5% Mutation Chance', effect: (G) => ({ critChance: 0.05 }) },
+    { id: 'a4', name: 'Ancient Feather', icon: '🪶', desc: '×1.2 Production', effect: (G) => ({ prodMult: 1.2 }) }
 ];
 
 const EVENTS = [
-    { name: 'ДНК Вълна',       emoji: '⚡', text: '×3 производство!',         mult: 3,   dur: 30 },
-    { name: 'Мутационен бум',   emoji: '☢️', text: '×5 клик сила!',            mult: 5,   dur: 20, clickOnly: true },
-    { name: 'Слънчево изригване',emoji: '☀️', text: '×2 производство!',         mult: 2,   dur: 45 },
-    { name: 'Генетичен дрифт',  emoji: '🎲', text: '×4 производство!',         mult: 4,   dur: 15 },
+    { name: 'DNA Wave',       emoji: '⚡', text: '×3 production!',         mult: 3,   dur: 30 },
+    { name: 'Mutation Boom',  emoji: '☢️', text: '×5 click power!',       mult: 5,   dur: 20, clickOnly: true },
+    { name: 'Solar Flare',    emoji: '☀️', text: 'The sun erupts — ×2 production briefly.', mult: 2,   dur: 45 },
+    { name: 'Ice Age',        emoji: '❄️', text: 'Production drops, but mutations are doubled!', mult: 0.35, dur: 35, mutGainMult: 2 },
+    { name: 'Genetic Drift',  emoji: '🎲', text: 'Chaotic changes — ×4 production!', mult: 4,   dur: 15 },
+    { name: 'Genetic Puzzle', emoji: '🧬', text: 'Solve the sequence for a permanent boost!', type: 'puzzle' },
 ];
 
 const SAVE_KEY   = 'evoGenesis_v3';
 const EVO_BASE   = 1000;
 const EVO_GROWTH = 8;
 const LEAP_REQ   = 5;
+
+// ─── КЕШИРАНИ DOM ЕЛЕМЕНТИ ──────────────────────
+const DOM = {};
+function cacheDom() {
+    DOM.dnaVal = document.getElementById('dna-val');
+    DOM.mutVal = document.getElementById('mut-val');
+    DOM.genVal = document.getElementById('gen-val');
+    DOM.mutBox = document.getElementById('mut-box');
+    DOM.genBox = document.getElementById('gen-box');
+    DOM.tabMut = document.getElementById('tab-mut');
+    DOM.tabGen = document.getElementById('tab-gen');
+    DOM.tabTree = document.getElementById('tab-tree');
+    DOM.stageName = document.getElementById('stage-name');
+    DOM.stageIcon = document.getElementById('stage-icon');
+    DOM.organism = document.getElementById('organism');
+    DOM.sClick = document.getElementById('s-click');
+    DOM.sDps = document.getElementById('s-dps');
+    DOM.sMult = document.getElementById('s-mult');
+    DOM.sTotal = document.getElementById('s-total');
+    DOM.clickSub = document.getElementById('click-sub');
+    DOM.evoFill = document.getElementById('evo-fill');
+    DOM.evoText = document.getElementById('evo-text');
+    DOM.evoBtn = document.getElementById('evo-btn');
+    DOM.evoInfo = document.getElementById('evo-info');
+    DOM.leapBtn = document.getElementById('leap-btn');
+    DOM.leapInfo = document.getElementById('leap-info');
+    DOM.fEvo = document.getElementById('f-evo');
+    DOM.fLeap = document.getElementById('f-leap');
+    DOM.fPlaytime = document.getElementById('f-playtime');
+    DOM.eventBanner = document.getElementById('event-banner');
+    DOM.eventText = document.getElementById('event-text');
+    DOM.eventTimer = document.getElementById('event-timer');
+    DOM.clickBtn = document.getElementById('click-btn');
+    DOM.floats = document.getElementById('floats');
+    DOM.toasts = document.getElementById('toasts');
+    DOM.modalOverlay = document.getElementById('modal-overlay');
+    DOM.modalTitle = document.getElementById('modal-title');
+    DOM.modalBody = document.getElementById('modal-body');
+    DOM.tDna = document.getElementById('t-dna');
+    DOM.tMut = document.getElementById('t-mut');
+    DOM.tTree = document.getElementById('t-tree');
+    DOM.tGen = document.getElementById('t-gen');
+    DOM.bgContainer = document.getElementById('bg-container');
+    DOM.tabCol = document.getElementById('tab-col');
+    DOM.artifactGrid = document.getElementById('artifact-grid');
+}
+
+// ─── ADAPTIVE BIOMES ───────────────────────────
+function updateBiome() {
+    if (!DOM.bgContainer) return;
+    let biome = 'biome-soup';
+    if (G.evoCount >= 7) biome = 'biome-galactic';
+    else if (G.evoCount >= 3) biome = 'biome-land';
+    
+    if (!document.body.classList.contains(biome)) {
+        document.body.classList.remove('biome-soup', 'biome-land', 'biome-galactic');
+        document.body.classList.add(biome);
+    }
+}
+
+// ─── BACKGROUND ENTITIES ───────────────────────
+const bgEntities = [];
+const BIOME_EMOJIS = {
+    'biome-soup': ['🦠', '🫧', '🧬', '💧'],
+    'biome-land': ['🦋', '🌱', '🦟', '🍃'],
+    'biome-galactic': ['✨', '☄️', '🌌', '⭐']
+};
+
+function initBgEntities() {
+    if (!DOM.bgContainer) return;
+    for (let i = 0; i < 15; i++) {
+        const el = document.createElement('div');
+        el.className = 'bg-entity';
+        const biome = 'biome-soup';
+        el.textContent = BIOME_EMOJIS[biome][0];
+        DOM.bgContainer.appendChild(el);
+        
+        const en = {
+            el,
+            x: Math.random() * window.innerWidth,
+            y: Math.random() * window.innerHeight,
+            vx: (Math.random() - 0.5) * 1.2,
+            vy: (Math.random() - 0.5) * 1.2,
+            biome: 'biome-soup'
+        };
+        bgEntities.push(en);
+    }
+    requestAnimationFrame(tickBgEntities);
+}
+
+function tickBgEntities() {
+    if (!DOM.bgContainer) return;
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const currentBiome = Array.from(document.body.classList).find(c => c.startsWith('biome-')) || 'biome-soup';
+
+    bgEntities.forEach(en => {
+        if (en.biome !== currentBiome) {
+            en.biome = currentBiome;
+            const emojis = BIOME_EMOJIS[currentBiome];
+            en.el.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+        }
+        en.x += en.vx; en.y += en.vy;
+        if (en.x < -50) en.x = vw + 50; if (en.x > vw + 50) en.x = -50;
+        if (en.y < -50) en.y = vh + 50; if (en.y > vh + 50) en.y = -50;
+        en.el.style.transform = `translate(${en.x}px, ${en.y}px)`;
+    });
+    requestAnimationFrame(tickBgEntities);
+}
 
 // ─── СЪСТОЯНИЕ ──────────────────────────────────
 function defaults() {
@@ -86,8 +255,12 @@ function defaults() {
         du: { replicase:0, ribosome:0, mitochondria:0, enzyme:0, division:0 },
         mu: { adaptation:0, mutagenesis:0, geneExpr:0, chromosome:0, selection:0 },
         gu: { cambrian:0, symbiogenesis:0, epigenetics:0, engineering:0 },
+        evoSkills: {},
         evoCount: 0, leapCount: 0,
         hasWon: false,
+        traits: {},
+        puzzleMult: 1,
+        artifacts: [],
         totalClicks: 0,
         totalFrenzies: 0,
         startTime: Date.now(),
@@ -100,6 +273,7 @@ function defaults() {
 let G = defaults();
 let buyQty = 1; // 1, 10, 25, 'max'
 let activeEvent = null; // { type, endTime }
+let _lastAchCheck = 0; // throttle achievement checks
 
 // ─── ПОМОЩНИ ────────────────────────────────────
 function fmt(n) {
@@ -114,18 +288,31 @@ function fmt(n) {
     return (s < 10 ? s.toFixed(2) : s < 100 ? s.toFixed(1) : s.toFixed(0)) + S[t];
 }
 function fmtTime(sec) {
-    if (sec < 60) return Math.floor(sec) + ' сек';
-    if (sec < 3600) return Math.floor(sec / 60) + ' мин';
+    if (sec < 60) return Math.floor(sec) + ' sec';
+    if (sec < 3600) return Math.floor(sec / 60) + ' min';
     const h = Math.floor(sec / 3600);
     const m = Math.floor((sec % 3600) / 60);
-    return h + ' ч ' + m + ' мин';
+    return h + ' h ' + m + ' min';
 }
 
 // ─── КАЛКУЛАЦИИ ────────────────────────────────
-function dnaCostMult()  { return Math.max(0.5, 1 - 0.05 * G.mu.selection); }
-function mutCostMult()  { return Math.max(0.4, 1 - 0.15 * G.gu.epigenetics); }
+function dnaCostMult()  { 
+    const baseMult = Math.max(0.5, 1 - 0.05 * G.mu.selection);
+    const leapMult = Math.pow(0.95, G.leapCount);
+    const enzymeMult = evoEnzymeMult();
+    const traitMult = G.traits?.t4 ? 0.8 : 1;
+    return baseMult * leapMult * enzymeMult * traitMult;
+}
+function mutCostMult()  { 
+    const baseMult = Math.max(0.4, 1 - 0.15 * G.gu.epigenetics);
+    const leapMult = Math.pow(0.95, G.leapCount);
+    const enzymeMult = evoEnzymeMult();
+    const traitMult = G.traits?.t4 ? 0.8 : 1;
+    return baseMult * leapMult * enzymeMult * traitMult;
+}
 function eventMultAll() { return (activeEvent && !activeEvent.clickOnly) ? activeEvent.mult : 1; }
 function eventMultClk() { return (activeEvent && activeEvent.clickOnly) ? activeEvent.mult : 1; }
+function eventMutGainMult() { return (activeEvent && activeEvent.mutGainMult) ? activeEvent.mutGainMult : 1; }
 
 function costDNA(i, lv) {
     if (lv === undefined) lv = G.du[DNA_UPG[i].id];
@@ -164,20 +351,78 @@ function costBulk(costFn, idx, idKey, upgArr, currency, n) {
 }
 
 function prodMult() {
+    let m = 1;
+    G.artifacts.forEach(id => {
+        const a = ARTIFACTS.find(x => x.id === id);
+        if (a && a.effect(G).prodMult) m *= a.effect(G).prodMult;
+    });
     const enz  = Math.pow(1.25, G.du.enzyme);
     const div  = Math.pow(1.50, G.du.division);
     const camb = Math.pow(2.00, G.gu.cambrian);
-    return enz * div * camb * eventMultAll();
+    return enz * div * camb * evoGlobalMult() * eventMultAll() * G.puzzleMult * m;
 }
 function clickPow() {
-    const base = 1 + G.du.replicase;
+    let m = 1;
+    G.artifacts.forEach(id => {
+        const a = ARTIFACTS.find(x => x.id === id);
+        if (a && a.effect(G).clickMult) m *= a.effect(G).clickMult;
+    });
+    const base = 1 + G.du.replicase + evoClickBonusFlat();
     const mBon = 1 + 0.30 * G.mu.mutagenesis;
-    return base * mBon * prodMult() * eventMultClk();
+    const traitMult = G.traits?.t1 ? 1.5 : 1;
+    return base * mBon * prodMult() * eventMultClk() * traitMult * m;
 }
 function dps() {
-    const base = G.du.ribosome * 0.5 + G.du.mitochondria * 3;
+    let m = 1;
+    G.artifacts.forEach(id => {
+        const a = ARTIFACTS.find(x => x.id === id);
+        if (a && a.effect(G).dpsMult) m *= a.effect(G).dpsMult;
+    });
+    const base = G.du.ribosome * 0.5 + G.du.mitochondria * 3 + evoDpsBonusFlat();
     const mBon = 1 + 0.30 * G.mu.geneExpr;
-    return base * mBon * prodMult();
+    const traitMult = G.traits?.t2 ? 1.4 : 1;
+    return base * mBon * prodMult() * traitMult * m;
+}
+
+// ─── EVOLUTION TREE EFFECTS ───────────────────
+function hasSkill(id) {
+    return !!(G.evoSkills && G.evoSkills[id]);
+}
+
+function evoClickBonusFlat() {
+    if (!G.evoSkills) return 0;
+    let add = 0;
+    evolutionTree.forEach(s => {
+        if (hasSkill(s.id) && s.type === 'Click Power') add += s.effectValue || 0;
+    });
+    return add;
+}
+
+function evoDpsBonusFlat() {
+    if (!G.evoSkills) return 0;
+    let add = 0;
+    evolutionTree.forEach(s => {
+        if (hasSkill(s.id) && s.type === 'Passive DNA') add += s.effectValue || 0;
+    });
+    return add;
+}
+
+function evoGlobalMult() {
+    if (!G.evoSkills) return 1;
+    let m = 1;
+    evolutionTree.forEach(s => {
+        if (hasSkill(s.id) && (s.type === 'Multiplier' || s.type === 'Ultimate')) m *= 1 + (s.effectValue || 0);
+    });
+    return m;
+}
+
+function evoEnzymeMult() {
+    if (!G.evoSkills) return 1;
+    let m = 1;
+    evolutionTree.forEach(s => {
+        if (hasSkill(s.id) && s.type === 'Cost Reduction') m *= 1 - (s.effectValue || 0);
+    });
+    return m;
 }
 
 function evoThresh() { return EVO_BASE * Math.pow(EVO_GROWTH, G.evoCount); }
@@ -185,7 +430,7 @@ function mutGain()   {
     const raw  = Math.floor(Math.pow(G.totalDNA / 100, 0.5));
     const cBon = 1 + 0.25 * G.mu.chromosome;
     const sBon = 1 + 0.50 * G.gu.symbiogenesis;
-    return Math.max(1, Math.floor(raw * cBon * sBon));
+    return Math.max(1, Math.floor(raw * cBon * sBon * eventMutGainMult()));
 }
 function genGain() { return Math.max(1, Math.floor(Math.pow(G.totalMutations / 5, 0.5))); }
 function canEvo()  { return G.totalDNA >= evoThresh(); }
@@ -194,43 +439,57 @@ function canLeap() { return G.evoCount >= LEAP_REQ; }
 function dnaEffect(i) {
     const lv = G.du[DNA_UPG[i].id];
     switch (i) {
-        case 0: return 'Текущо: +' + lv + ' ДНК/клик';
-        case 1: return 'Текущо: +' + (lv * 0.5).toFixed(1) + ' ДНК/сек';
-        case 2: return 'Текущо: +' + (lv * 3) + ' ДНК/сек';
-        case 3: return 'Текущо: ×' + Math.pow(1.25, lv).toFixed(2);
-        case 4: return 'Текущо: ×' + Math.pow(1.50, lv).toFixed(2);
+        case 0: return 'Current: +' + lv + ' DNA/click';
+        case 1: return 'Current: +' + (lv * 0.5).toFixed(1) + ' DNA/sec';
+        case 2: return 'Current: +' + (lv * 3) + ' DNA/sec';
+        case 3: return 'Current: ×' + Math.pow(1.25, lv).toFixed(2);
+        case 4: return 'Current: ×' + Math.pow(1.50, lv).toFixed(2);
     }
 }
 function mutEffect(i) {
     const lv = G.mu[MUT_UPG[i].id];
     switch (i) {
-        case 0: return 'Текущо: +' + (lv * 100) + ' начални ДНК';
-        case 1: return 'Текущо: +' + (lv * 30) + '% клик бонус';
-        case 2: return 'Текущо: +' + (lv * 30) + '% авто бонус';
-        case 3: return 'Текущо: +' + (lv * 25) + '% мутации';
-        case 4: return 'Текущо: -' + Math.min(lv * 5, 50) + '% ДНК цени';
+        case 0: return 'Current: +' + (lv * 100) + ' starting DNA';
+        case 1: return 'Current: +' + (lv * 30) + '% click bonus';
+        case 2: return 'Current: +' + (lv * 30) + '% auto bonus';
+        case 3: return 'Current: +' + (lv * 25) + '% mutations';
+        case 4: return 'Current: -' + Math.min(lv * 5, 50) + '% DNA costs';
     }
 }
 function genEffect(i) {
     const lv = G.gu[GEN_UPG[i].id];
     switch (i) {
-        case 0: return 'Текущо: ×' + Math.pow(2, lv).toFixed(0) + ' производство';
-        case 1: return 'Текущо: +' + (lv * 50) + '% мутации';
-        case 2: return 'Текущо: -' + Math.min(lv * 15, 60) + '% мут. цени';
-        case 3: return 'Текущо: +' + (lv * 2) + ' начални мутации';
+        case 0: return 'Current: ×' + Math.pow(2, lv).toFixed(0) + ' production';
+        case 1: return 'Current: +' + (lv * 50) + '% mutations';
+        case 2: return 'Current: -' + Math.min(lv * 15, 60) + '% mut. costs';
+        case 3: return 'Current: +' + (lv * 2) + ' starting mutations';
     }
 }
 
 // ─── ДЕЙСТВИЯ ──────────────────────────────────
 function doClick(e) {
-    const pw = clickPow();
+    let addCrit = 0;
+    G.artifacts.forEach(id => {
+        const a = ARTIFACTS.find(x => x.id === id);
+        if (a && a.effect(G).critChance) addCrit += a.effect(G).critChance;
+    });
+    const isCrit = Math.random() < (0.05 + addCrit);
+    const critLevel = G.traits?.t3 ? 5 : 3;
+    const critMult = isCrit ? critLevel : 1;
+    const pw = clickPow() * critMult;
+    
     G.dna += pw; G.totalDNA += pw; G.allTimeDNA += pw; G.totalClicks++;
     const rect = e.currentTarget.getBoundingClientRect();
     const cx = rect.left + rect.width / 2;
     const cy = rect.top;
-    spawnFloat('+' + fmt(pw), cx + (Math.random() - 0.5) * 50, cy - 5);
-    if (G.settings.particles) spawnParticles(e.clientX || cx, e.clientY || (cy + rect.height / 2), 5);
-    checkAchievements();
+    
+    const txt = (isCrit ? '✨ CRIT! +' : '+') + fmt(pw);
+    spawnFloat(txt, cx + (Math.random() - 0.5) * 50, cy - 5, isCrit);
+    
+    if (G.settings.particles) spawnParticles(e.clientX || cx, e.clientY || (cy + rect.height / 2), isCrit ? 10 : 4);
+    throttledAchCheck();
+    if (DOM.dnaVal) DOM.dnaVal.textContent = fmt(G.dna);
+    tryDropArtifact();
 }
 
 function buyDNA(i) {
@@ -250,21 +509,77 @@ function buyGen(i) {
     if (count > 0 && G.genomes >= total) { G.genomes -= total; G.gu[u.id] += count; buildShop(); }
 }
 
+// ─── EVOLUTION TREE BUY LOGIC ─────────────────
+function hasPathConflict(node) {
+    if (!node.pathGroup) return false;
+    const groupNodes = evolutionTree.filter(n => n.pathGroup === node.pathGroup);
+    const mySubPath = node.cx;
+    const otherSubPathNodes = groupNodes.filter(n => n.cx !== mySubPath);
+    
+    // Check if the other path has any bought skills
+    const otherPurchased = otherSubPathNodes.filter(n => isSkillPurchased(n));
+    if (otherPurchased.length === 0) return false; // No conflict
+    
+    // If the other path was touched, it's a conflict UNLESS they reached the very bottom capstone
+    const maxOtherCy = Math.max(...otherSubPathNodes.map(n => n.cy));
+    const isOtherMaxed = otherSubPathNodes.some(n => n.cy === maxOtherCy && isSkillPurchased(n));
+    
+    return !isOtherMaxed; // If other is not maxed out, there is a conflict
+}
+
+function isSkillUnlocked(node) {
+    if (!node.requirement) return true;
+    if (Array.isArray(node.requirement)) {
+        return node.requirement.some(req => hasSkill(req));
+    }
+    return hasSkill(node.requirement);
+}
+
+function isSkillPurchased(node) {
+    return hasSkill(node.id);
+}
+
+function canBuySkill(node) {
+    if (isSkillPurchased(node)) return false;
+    if (!isSkillUnlocked(node)) return false;
+    if (hasPathConflict(node)) return false;
+    return G.dna >= node.dnaCost;
+}
+
+function buyEvolutionSkill(id) {
+    const node = evolutionTree.find(n => n.id === id);
+    if (!node) return;
+    if (!canBuySkill(node)) return;
+    G.dna -= node.dnaCost;
+    if (!G.evoSkills) G.evoSkills = {};
+    G.evoSkills[id] = true;
+    showToast('tree-toast', '🌿', 'New DNA Skill', `${node.name} was unlocked.`, 3500);
+    buildShop();
+    updateUI();
+
+    // Pulse animation
+    const btn = document.querySelector(`.evo-skill[data-id="${id}"]`);
+    if (btn) {
+        btn.classList.add('skill-bought-anim');
+        setTimeout(() => btn.classList.remove('skill-bought-anim'), 600);
+    }
+}
+
 function evolve() {
     if (!canEvo()) return;
     const gain = mutGain();
     if (G.settings.confirmEvo) {
-        if (!confirm(`🧬 Еволюция!\n\nЩе получиш: +${gain} мутации\nЩе загубиш: всички ДНК точки и ДНК ъпгрейди.\n\nПродължаваш?`)) return;
+        if (!confirm(`🧬 Evolution Leap!\n\nYou will gain: +${gain} mutations\nYou will lose: all DNA points and DNA upgrades.\n\nContinue?`)) return;
     }
     G.mutations += gain; G.totalMutations += gain; G.evoCount++;
     G.dna = G.mu.adaptation * 100; G.totalDNA = 0;
     G.du = { replicase:0, ribosome:0, mitochondria:0, enzyme:0, division:0 };
     flashScreen();
-    showToast('evo-toast', '🧬', 'Еволюция!', `+${fmt(gain)} мутации · Етап: ${STAGES[Math.min(G.evoCount, STAGES.length-1)].name}`);
+    showToast('evo-toast', '🧬', 'Evolution!', `+${fmt(gain)} mutations · Stage: ${STAGES[Math.min(G.evoCount, STAGES.length-1)].name}`);
     const si = Math.min(G.evoCount, STAGES.length - 1);
     if (si === STAGES.length - 1 && !G.hasWon) {
         G.hasWon = true;
-        setTimeout(() => showToast('ach-toast', '🎉', 'Победа!', `Достигна "${STAGES[si].name}"! Играта продължава...`), 500);
+        setTimeout(() => showToast('ach-toast', '🎉', 'Victory!', `Reached "${STAGES[si].name}"! The game continues...`), 500);
     }
     checkAchievements(); buildShop(); updateUI(); buildTimeline();
 }
@@ -273,13 +588,14 @@ function genomeLeap() {
     if (!canLeap()) return;
     const gain = genGain();
     if (G.settings.confirmLeap) {
-        if (!confirm(`🔬 Геномен скок!\n\nЩе получиш: +${gain} геноми\nЩе загубиш: ВСИЧКО освен геномни ъпгрейди.\n\nПродължаваш?`)) return;
+        if (!confirm(`🔬 Genomic Leap!\n\nYou will gain: +${gain} genomes\nYou will lose: EVERYTHING except genome upgrades.\n\nContinue?`)) return;
     }
     const savedGU = { ...G.gu }, savedLC = G.leapCount + 1, savedGems = G.genomes + gain;
     const savedAT = G.allTimeDNA, savedWon = G.hasWon;
     const savedClicks = G.totalClicks, savedFrenzies = G.totalFrenzies;
     const savedStart = G.startTime, savedPlayTime = G.totalPlayTime;
     const savedAch = [...G.achUnlocked], savedSettings = { ...G.settings };
+    const savedSkills = { ...(G.evoSkills || {}) }; // persist skills
 
     G = defaults();
     G.gu = savedGU; G.leapCount = savedLC; G.genomes = savedGems;
@@ -288,33 +604,54 @@ function genomeLeap() {
     G.totalClicks = savedClicks; G.totalFrenzies = savedFrenzies;
     G.startTime = savedStart; G.totalPlayTime = savedPlayTime;
     G.achUnlocked = savedAch; G.settings = savedSettings;
+    G.evoSkills = savedSkills; // restore skills
 
     flashScreen();
-    showToast('evo-toast', '🔬', 'Геномен скок!', `+${fmt(gain)} геноми`);
+    showToast('evo-toast', '🔬', 'Genomic Leap!', `+${fmt(gain)} genomes`);
     checkAchievements(); buildShop(); updateUI(); buildTimeline();
 }
 
 // ─── FLOATING TEXT & PARTICLES ─────────────────
-function spawnFloat(txt, x, y) {
+const effectPools = { ft: [], particle: [] };
+
+function getEffectEl(type, className) {
+    if (effectPools[type].length > 0) {
+        const el = effectPools[type].pop();
+        el.style.animation = 'none';
+        void el.offsetWidth; // trigger reflow
+        el.style.animation = null;
+        return el;
+    }
     const el = document.createElement('div');
-    el.className = 'ft'; el.textContent = txt;
+    el.className = className;
+    DOM.floats.appendChild(el);
+    return el;
+}
+
+function releaseEffectEl(type, el) {
+    el.style.left = '-999px';
+    el.style.top = '-999px';
+    effectPools[type].push(el);
+}
+
+function spawnFloat(txt, x, y, isCrit = false) {
+    const el = getEffectEl('ft', 'ft');
+    el.textContent = txt;
+    if (isCrit) el.classList.add('crit');
+    else el.classList.remove('crit');
     el.style.left = x + 'px'; el.style.top = y + 'px';
-    document.getElementById('floats').appendChild(el);
-    setTimeout(() => el.remove(), 900);
+    setTimeout(() => releaseEffectEl('ft', el), 900);
 }
 
 function spawnParticles(x, y, n) {
-    const cont = document.getElementById('floats');
     for (let i = 0; i < n; i++) {
-        const p = document.createElement('div');
-        p.className = 'particle';
+        const p = getEffectEl('particle', 'particle');
         const angle = Math.random() * Math.PI * 2;
         const dist = 40 + Math.random() * 60;
         p.style.left = x + 'px'; p.style.top = y + 'px';
         p.style.setProperty('--px', Math.cos(angle) * dist + 'px');
         p.style.setProperty('--py', Math.sin(angle) * dist + 'px');
-        cont.appendChild(p);
-        setTimeout(() => p.remove(), 600);
+        setTimeout(() => releaseEffectEl('particle', p), 600);
     }
 }
 
@@ -325,55 +662,66 @@ function flashScreen() {
 
 // ─── TOAST NOTIFICATIONS ───────────────────────
 function showToast(cls, icon, title, desc, duration) {
-    const c = document.getElementById('toasts');
     const t = document.createElement('div');
     t.className = 'toast ' + cls;
     t.innerHTML = `<span class="toast-ico">${icon}</span><div class="toast-body"><div class="toast-title">${title}</div><div class="toast-desc">${desc}</div></div>`;
-    c.appendChild(t);
+    DOM.toasts.appendChild(t);
     const dur = duration || 4000;
     setTimeout(() => { t.classList.add('out'); setTimeout(() => t.remove(), 300); }, dur);
 }
 
 // ─── ACHIEVEMENTS ──────────────────────────────
 function checkAchievements() {
-    ACHIEVEMENTS.forEach(a => {
-        if (G.achUnlocked.includes(a.id)) return;
+    const unlocked = G.achUnlocked;
+    for (let i = 0; i < ACHIEVEMENTS.length; i++) {
+        const a = ACHIEVEMENTS[i];
+        if (unlocked.includes(a.id)) continue;
         if (a.check(G)) {
-            G.achUnlocked.push(a.id);
+            unlocked.push(a.id);
             showToast('ach-toast', '🏆', a.name, a.desc, 5000);
         }
-    });
+    }
+}
+function throttledAchCheck() {
+    const now = performance.now();
+    if (now - _lastAchCheck > 2000) {
+        _lastAchCheck = now;
+        checkAchievements();
+    }
 }
 
 // ─── RANDOM EVENTS ─────────────────────────────
 let eventTimer = null;
 function trySpawnEvent() {
     if (activeEvent) return;
-    if (dps() < 1 && G.totalClicks < 10) return; // don't fire too early
-    if (Math.random() > 0.15) return; // ~15% chance every 60s
+    if (dps() < 1 && G.totalClicks < 10) return;
+    if (Math.random() > 0.15) return;
     const ev = EVENTS[Math.floor(Math.random() * EVENTS.length)];
+    if (ev.type === 'puzzle') {
+        startGeneticPuzzle();
+        return;
+    }
     activeEvent = { ...ev, endTime: Date.now() + ev.dur * 1000 };
     G.totalFrenzies++;
-    const banner = document.getElementById('event-banner');
-    banner.classList.remove('hidden');
-    document.getElementById('event-text').textContent = ev.name + '! ' + ev.text;
-    document.getElementById('click-btn').classList.add('frenzy');
-    showToast('event-toast', ev.emoji, ev.name, ev.text + ` (${ev.dur} сек)`, 3000);
+    DOM.eventBanner.classList.remove('hidden');
+    DOM.eventText.textContent = ev.name + '! ' + ev.text;
+    DOM.clickBtn.classList.add('frenzy');
+    showToast('event-toast', ev.emoji, ev.name, ev.text + ` (${ev.dur} sec)`, 3000);
     checkAchievements();
 }
 function updateEvent() {
     if (!activeEvent) return;
     const rem = Math.max(0, (activeEvent.endTime - Date.now()) / 1000);
-    document.getElementById('event-timer').textContent = Math.ceil(rem) + 'с';
+    DOM.eventTimer.textContent = Math.ceil(rem) + 's';
     if (rem <= 0) {
         activeEvent = null;
-        document.getElementById('event-banner').classList.add('hidden');
-        document.getElementById('click-btn').classList.remove('frenzy');
+        DOM.eventBanner.classList.add('hidden');
+        DOM.clickBtn.classList.remove('frenzy');
     }
 }
 
 // ─── UI: SHOP ──────────────────────────────────
-function buildShop() { buildDNATab(); buildMutTab(); buildGenTab(); }
+function buildShop() { buildDNATab(); buildMutTab(); buildTreeTab(); buildGenTab(); }
 
 function makeUpgBtn(cls, name, desc, effect, lvl, costStr, disabled, maxed, onClick) {
     const b = document.createElement('button');
@@ -383,7 +731,7 @@ function makeUpgBtn(cls, name, desc, effect, lvl, costStr, disabled, maxed, onCl
         `<div class="upg-name">${name}</div>` +
         `<div class="upg-desc">${desc}</div>` +
         `<div class="upg-effect">${effect}</div>` +
-        `<div class="upg-foot"><span class="upg-lvl">${maxed ? 'МАКС' : 'Ниво: ' + lvl}</span><span class="upg-cost">${costStr}</span></div>`;
+        `<div class="upg-foot"><span class="upg-lvl">${maxed ? 'MAX' : 'Level: ' + lvl}</span><span class="upg-cost">${costStr}</span></div>`;
     if (!maxed) b.addEventListener('click', onClick);
     return b;
 }
@@ -395,115 +743,428 @@ function bulkLabel(count, total, symbol, color) {
 }
 
 function buildDNATab() {
-    const el = document.getElementById('t-dna'); el.innerHTML = '';
+    const el = DOM.tDna; el.innerHTML = '';
+    const frag = document.createDocumentFragment();
     DNA_UPG.forEach((u, i) => {
         const { count, total } = costBulk(costDNA, i, 'du', DNA_UPG, G.dna, buyQty);
-        el.appendChild(makeUpgBtn('dna-u', u.name, u.desc, dnaEffect(i), G.du[u.id],
+        frag.appendChild(makeUpgBtn('dna-u', u.name, u.desc, dnaEffect(i), G.du[u.id],
             bulkLabel(count, total, '🧬', 'dna-cost'), G.dna < total || count <= 0, false, () => buyDNA(i)));
     });
+    el.appendChild(frag);
 }
 function buildMutTab() {
-    const el = document.getElementById('t-mut'); el.innerHTML = '';
+    const el = DOM.tMut; el.innerHTML = '';
     if (G.evoCount === 0 && G.mutations === 0 && G.leapCount === 0) {
-        el.innerHTML = '<div class="lock-msg"><span class="lock-emoji">🔒</span>Еволюирай поне веднъж,<br>за да отключиш мутациите!</div>';
+        el.innerHTML = '<div class="lock-msg"><span class="lock-emoji">🔒</span>Evolve at least once<br>to unlock mutations!</div>';
         return;
     }
+    const frag = document.createDocumentFragment();
     MUT_UPG.forEach((u, i) => {
         const mx = u.max && G.mu[u.id] >= u.max;
         const { count, total } = mx ? {count:0,total:0} : costBulk(costMut, i, 'mu', MUT_UPG, G.mutations, buyQty);
-        el.appendChild(makeUpgBtn('mut-u', u.name, u.desc, mutEffect(i), G.mu[u.id],
+        frag.appendChild(makeUpgBtn('mut-u', u.name, u.desc, mutEffect(i), G.mu[u.id],
             mx ? '—' : bulkLabel(count, total, '🧪', 'mut-cost'), G.mutations < total || count <= 0, mx, () => buyMut(i)));
     });
+    el.appendChild(frag);
+
+    // Traits Section
+    const traitHeader = document.createElement('div');
+    traitHeader.className = 'section-header';
+    traitHeader.innerHTML = '<h3>Specialized Traits</h3><p>Unique permanent modifications</p>';
+    el.appendChild(traitHeader);
+
+    const traitGrid = document.createElement('div');
+    traitGrid.className = 'trait-grid';
+    TRAITS.forEach(t => {
+        const canAfford = G.mutations >= t.cost;
+        const isLocked = !t.check(G);
+        const isBought = G.traits[t.id];
+        
+        const btn = document.createElement('button');
+        btn.className = `trait-btn ${isBought ? 'bought' : ''} ${isLocked ? 'locked' : ''} ${canAfford ? 'affordable' : ''}`;
+        btn.disabled = isLocked || isBought || !canAfford;
+        btn.innerHTML = `
+            <div class="trait-name">${t.name}</div>
+            <div class="trait-desc">${t.desc}</div>
+            <div class="trait-cost">${isBought ? 'OWNED' : (isLocked ? 'LOCKED' : '🧪 ' + t.cost)}</div>
+        `;
+        btn.onclick = () => buyTrait(t.id);
+        traitGrid.appendChild(btn);
+    });
+    el.appendChild(traitGrid);
 }
 function buildGenTab() {
-    const el = document.getElementById('t-gen'); el.innerHTML = '';
+    const el = DOM.tGen; el.innerHTML = '';
     if (G.leapCount === 0 && G.genomes === 0) {
-        el.innerHTML = '<div class="lock-msg"><span class="lock-emoji">🔒</span>Направи геномен скок,<br>за да отключиш геномите!</div>';
+        el.innerHTML = '<div class="lock-msg"><span class="lock-emoji">🔒</span>Make a genomic leap<br>to unlock genomes!</div>';
         return;
     }
+    const frag = document.createDocumentFragment();
     GEN_UPG.forEach((u, i) => {
         const mx = u.max && G.gu[u.id] >= u.max;
         const { count, total } = mx ? {count:0,total:0} : costBulk(costGen, i, 'gu', GEN_UPG, G.genomes, buyQty);
-        el.appendChild(makeUpgBtn('gen-u', u.name, u.desc, genEffect(i), G.gu[u.id],
+        frag.appendChild(makeUpgBtn('gen-u', u.name, u.desc, genEffect(i), G.gu[u.id],
             mx ? '—' : bulkLabel(count, total, '🔬', 'gen-cost'), G.genomes < total || count <= 0, mx, () => buyGen(i)));
     });
+    el.appendChild(frag);
 }
 
 // ─── UI: UPDATE ────────────────────────────────
 function updateUI() {
-    document.getElementById('dna-val').textContent = fmt(G.dna);
-    document.getElementById('mut-val').textContent = fmt(G.mutations);
-    document.getElementById('gen-val').textContent = fmt(G.genomes);
+    DOM.dnaVal.textContent = fmt(G.dna);
+    DOM.mutVal.textContent = fmt(G.mutations);
+    DOM.genVal.textContent = fmt(G.genomes);
 
     const mutVis = G.evoCount > 0 || G.mutations > 0 || G.leapCount > 0;
     const genVis = G.leapCount > 0 || G.genomes > 0;
-    document.getElementById('mut-box').classList.toggle('hidden', !mutVis);
-    document.getElementById('gen-box').classList.toggle('hidden', !genVis);
-    const tMut = document.getElementById('tab-mut');
-    const tGen = document.getElementById('tab-gen');
-    if (mutVis) { tMut.classList.remove('locked'); tMut.textContent = '🧪 Мутации'; }
-    if (genVis) { tGen.classList.remove('locked'); tGen.textContent = '🔬 Геноми'; }
+    DOM.mutBox.classList.toggle('hidden', !mutVis);
+    DOM.genBox.classList.toggle('hidden', !genVis);
+    if (mutVis) {
+        DOM.tabMut.classList.remove('locked');
+        DOM.tabMut.textContent = '🧪 Mutations';
+        DOM.tabTree.classList.remove('locked');
+        DOM.tabTree.textContent = '🌿 Skill Tree';
+    }
+    if (genVis) { DOM.tabGen.classList.remove('locked'); DOM.tabGen.textContent = '🔬 Genomes'; }
 
     const si = Math.min(G.evoCount, STAGES.length - 1);
-    document.getElementById('stage-name').textContent = STAGES[si].name;
-    document.getElementById('stage-icon').textContent = STAGES[si].icon;
-    document.getElementById('organism').textContent   = STAGES[si].icon;
+    DOM.stageName.textContent = STAGES[si].name;
+    DOM.stageIcon.textContent = STAGES[si].icon;
+    DOM.organism.textContent   = STAGES[si].icon;
 
-    document.getElementById('s-click').textContent = fmt(clickPow());
-    document.getElementById('s-dps').textContent   = fmt(dps());
-    document.getElementById('s-mult').textContent  = '×' + prodMult().toFixed(2);
-    document.getElementById('s-total').textContent = fmt(G.totalDNA);
-    document.getElementById('click-sub').textContent = '+' + fmt(clickPow()) + ' ДНК';
+    const cpw = clickPow();
+    DOM.sClick.textContent = fmt(cpw);
+    DOM.sDps.textContent   = fmt(dps());
+    DOM.sMult.textContent  = '×' + prodMult().toFixed(2);
+    DOM.sTotal.textContent = fmt(G.totalDNA);
+    DOM.clickSub.textContent = '+' + fmt(cpw) + ' DNA';
 
     const th = evoThresh(), pct = Math.min(G.totalDNA / th, 1);
-    document.getElementById('evo-fill').style.width = (pct * 100) + '%';
-    document.getElementById('evo-text').textContent = fmt(G.totalDNA) + ' / ' + fmt(th);
+    DOM.evoFill.style.width = (pct * 100) + '%';
+    DOM.evoText.textContent = fmt(G.totalDNA) + ' / ' + fmt(th);
 
-    const eBtn = document.getElementById('evo-btn');
-    eBtn.disabled = !canEvo();
-    document.getElementById('evo-info').textContent =
-        canEvo() ? '+' + fmt(mutGain()) + ' мутации' : 'Нужни: ' + fmt(th) + ' ДНК';
+    const canE = canEvo();
+    DOM.evoBtn.disabled = !canE;
+    DOM.evoBtn.classList.toggle('ready', canE);
+    DOM.evoInfo.textContent =
+        canE ? '+' + fmt(mutGain()) + ' mutations' : 'Needed: ' + fmt(th) + ' DNA';
 
-    const lBtn = document.getElementById('leap-btn');
     if (G.evoCount >= 3 || G.leapCount > 0) {
-        lBtn.classList.remove('hidden');
-        lBtn.disabled = !canLeap();
-        document.getElementById('leap-info').textContent =
-            canLeap() ? '+' + fmt(genGain()) + ' геноми' : `Нужни: ${LEAP_REQ} еволюции (${G.evoCount}/${LEAP_REQ})`;
+        DOM.leapBtn.classList.remove('hidden');
+        const canL = canLeap();
+        DOM.leapBtn.disabled = !canL;
+        DOM.leapBtn.classList.toggle('ready', canL);
+        DOM.leapInfo.textContent =
+            canL ? '+' + fmt(genGain()) + ' genomes' : `Needed: ${LEAP_REQ} evolutions (${G.evoCount}/${LEAP_REQ})`;
     }
 
-    document.getElementById('f-evo').textContent  = G.evoCount;
-    document.getElementById('f-leap').textContent = G.leapCount;
+    DOM.fEvo.textContent  = G.evoCount;
+    DOM.fLeap.textContent = G.leapCount;
 
     // Playtime
     const pt = (G.totalPlayTime + Date.now() - G.startTime) / 1000;
-    document.getElementById('f-playtime').textContent = 'Време: ' + fmtTime(pt);
+    DOM.fPlaytime.textContent = 'Time: ' + fmtTime(pt);
 
     updateShopState();
     updateEvent();
+    updateBiome();
 }
 
 function updateShopState() {
     document.querySelectorAll('#t-dna .upg').forEach((b, i) => {
         if (b.classList.contains('maxed')) return;
         const { count, total } = costBulk(costDNA, i, 'du', DNA_UPG, G.dna, buyQty);
+        const isTooPricey = total > G.dna * 500 && G.du[DNA_UPG[i].id] > 0;
+        b.classList.toggle('hidden', isTooPricey);
         b.disabled = G.dna < total || count <= 0;
         const costEl = b.querySelector('.dna-cost');
         if (costEl) costEl.textContent = '🧬 ' + fmt(total) + (count > 1 ? ` (×${count})` : '');
-        const lvEl = b.querySelector('.upg-lvl');
-        if (lvEl) lvEl.textContent = 'Ниво: ' + G.du[DNA_UPG[i].id];
-        const efEl = b.querySelector('.upg-effect');
-        if (efEl) efEl.textContent = dnaEffect(i);
     });
+
     document.querySelectorAll('#t-mut .upg').forEach((b, i) => {
         if (b.classList.contains('maxed')) return;
         const { count, total } = costBulk(costMut, i, 'mu', MUT_UPG, G.mutations, buyQty);
         b.disabled = G.mutations < total || count <= 0;
     });
+
     document.querySelectorAll('#t-gen .upg').forEach((b, i) => {
         if (b.classList.contains('maxed')) return;
         const { count, total } = costBulk(costGen, i, 'gu', GEN_UPG, G.genomes, buyQty);
         b.disabled = G.genomes < total || count <= 0;
+    });
+
+    updateEvolutionTreeState();
+}
+
+function buyAllDNA() {
+    let changed = false;
+    DNA_UPG.forEach((u, i) => {
+        const { count, total } = costBulk(costDNA, i, 'du', DNA_UPG, G.dna, 'max');
+        if (count > 0 && G.dna >= total) {
+            G.dna -= total;
+            G.du[u.id] += count;
+            changed = true;
+        }
+    });
+    if (changed) {
+        showToast('buy-toast', '⚡', 'Bulk Purchase', 'All affordable upgrades bought!');
+        buildShop(); updateUI();
+    }
+}
+
+function buyTrait(id) {
+    const t = TRAITS.find(x => x.id === id);
+    if (!t || G.traits[id] || G.mutations < t.cost || !t.check(G)) return;
+    G.mutations -= t.cost;
+    G.traits[id] = true;
+    showToast('trait-toast', '🧬', 'Trait Acquired', t.name);
+    buildShop(); updateUI();
+}
+
+// ─── EVOLUTION TREE UI ────────────────────────
+function buildTreeTab() {
+    const el = DOM.tTree;
+    el.innerHTML = '';
+    if (G.evoCount === 0 && G.mutations === 0 && G.leapCount === 0) {
+        el.innerHTML = '<div class="lock-msg"><span class="lock-emoji">🔒</span>Evolve at least once<br>to unlock the evolution tree!</div>';
+        return;
+    }
+    buildEvolutionTree(el);
+}
+
+function buildEvolutionTree(parentEl) {
+    const wrap = document.createElement('div');
+    wrap.className = 'evo-tree';
+
+    const title = document.createElement('div');
+    title.className = 'evo-tree-title';
+    title.innerHTML = 'Evolution Tree (DNA Skills) <small style="display:block; font-weight:normal; margin-top:4px; opacity:0.8;">💡 Hover over circles to see what the upgrade gives. Click to unlock!</small>';
+    wrap.appendChild(title);
+
+    const viewport = document.createElement('div');
+    viewport.className = 'evo-tree-viewport';
+
+    const radial = document.createElement('div');
+    radial.className = 'evo-tree-radial';
+
+    // Layout logic: static grid mapping based on cx, cy
+    const centerX = 1500;
+    const topY = 200;
+    const colWidth = 260; // horizontal spacing between paths
+    const rowHeight = 180; // vertical spacing
+    const nodeSize = 80;
+
+    const positions = {};
+    evolutionTree.forEach(n => {
+        positions[n.id] = {
+            x: centerX + (n.cx || 0) * colWidth,
+            y: topY + (n.cy || 0) * rowHeight
+        };
+    });
+
+    // Draw links
+    evolutionTree.forEach(n => {
+        if (!n.requirement) return;
+        const reqs = Array.isArray(n.requirement) ? n.requirement : [n.requirement];
+        reqs.forEach(req => {
+            const p = positions[req];
+            const c = positions[n.id];
+            if (!p || !c) return;
+            const dx = c.x - p.x;
+            const dy = c.y - p.y;
+            const dist = Math.sqrt(dx*dx + dy*dy);
+            const ang = Math.atan2(dy, dx);
+            const link = document.createElement('div');
+            link.className = 'evo-link';
+            link.style.width = dist + 'px';
+            link.style.left = p.x + 'px';
+            link.style.top = p.y + 'px';
+            link.style.transform = 'rotate(' + ang + 'rad)';
+            radial.appendChild(link);
+        });
+    });
+
+    // Draw nodes
+    evolutionTree.forEach(n => {
+        const pos = positions[n.id];
+        if (!pos) return;
+        const nodeEl = makeSkillNode(n);
+        nodeEl.classList.add('radial-node');
+        
+        const r = n.isUltimate ? 40 : 30; // 80px vs 60px diameter
+        nodeEl.style.left = (pos.x - r) + 'px';
+        nodeEl.style.top  = (pos.y - r) + 'px';
+        radial.appendChild(nodeEl);
+    });
+
+    viewport.appendChild(radial);
+    wrap.appendChild(viewport);
+    parentEl.appendChild(wrap);
+
+    // Center the world on root node
+    const vw = viewport.clientWidth || 480;
+    const vh = viewport.clientHeight || 480;
+    
+    // Calculate initial translation to show the bottom root area
+    // Root is now at cy: 9 -> y = topY + 9 * rowHeight = 200 + 1620 = 1820
+    const rootPos = positions['evo_root'] || { x: centerX, y: 1820 };
+    const initialTx = vw / 2 - rootPos.x;
+    const initialTy = vh / 2 - rootPos.y + 120; // offset upwards so the root is visible
+    setupTreeDrag(viewport, radial, initialTx, initialTy);
+}
+
+function makeSkillNode(node) {
+    const btn = document.createElement('button');
+    btn.className = 'evo-skill' + (node.isUltimate ? ' ultimate-node' : '');
+    btn.dataset.id = node.id;
+
+    const purchased = isSkillPurchased(node);
+    const unlocked = isSkillUnlocked(node);
+    const conflict  = hasPathConflict(node);
+    const affordable = canBuySkill(node);
+
+    if (purchased) btn.classList.add('purchased');
+    if (!unlocked || conflict) btn.classList.add('locked-parent');
+    if (affordable && !purchased) btn.classList.add('affordable');
+
+    btn.disabled = !affordable;
+
+    let stateText;
+    if (purchased) stateText = 'Purchased';
+    else if (!unlocked) stateText = 'Locked (requires previous skill)';
+    else if (conflict) stateText = 'Locked (another evolution path chosen)';
+    else if (G.dna < node.dnaCost) stateText = 'Not enough DNA';
+    else stateText = 'Available';
+
+    let effectLabel = '';
+    if (node.type === 'Click Power') {
+        effectLabel = `Effect: +${node.effectValue} DNA on every click`;
+    } else if (node.type === 'Passive DNA') {
+        effectLabel = `Effect: +${node.effectValue} DNA per second (passive)`;
+    } else if (node.type === 'Multiplier') {
+        effectLabel = `Effect: +${Math.round((node.effectValue || 0) * 100)}% to all production`;
+    } else if (node.type === 'Cost Reduction') {
+        effectLabel = `Effect: -${Math.round((node.effectValue || 0) * 100)}% to DNA & Mutation costs`;
+    } else if (node.type === 'Ultimate') {
+        effectLabel = `Effect: ×${Math.round((node.effectValue || 0))} multiplier to ALL production!`;
+    } else {
+        effectLabel = node.type || '';
+    }
+
+    const costLabel = purchased ? 'Purchased' : `Cost: 🧬 ${fmt(node.dnaCost)}`;
+
+    btn.innerHTML =
+        `<div class="evo-skill-icon">${node.icon || '❔'}</div>` +
+        `<div class="evo-skill-tooltip">
+            <div class="evo-skill-name">${node.name}</div>
+            ${effectLabel ? `<div class="evo-skill-effect">${effectLabel}</div>` : ''}
+            <div class="evo-skill-cost">${costLabel}</div>
+            <div class="evo-skill-state">${stateText}</div>
+        </div>`;
+
+    if (!purchased) {
+        btn.addEventListener('click', () => buyEvolutionSkill(node.id));
+    }
+
+    return btn;
+}
+
+function setupTreeDrag(viewport, radial, startTx = 0, startTy = 0) {
+    const state = { dragging:false, lastX:0, lastY:0, tx:startTx, ty:startTy, scale:1 };
+
+    function apply() {
+        radial.style.transform = `translate(${state.tx}px, ${state.ty}px) scale(${state.scale})`;
+    }
+
+    // Apply initial centering
+    apply();
+
+    viewport.addEventListener('pointerdown', e => {
+        // Не стартирай drag, ако кликът е върху умение
+        if (e.target && e.target.closest && e.target.closest('.evo-skill')) return;
+        if (e.button !== 0) return; // само ляв бутон
+        state.dragging = true;
+        state.lastX = e.clientX;
+        state.lastY = e.clientY;
+        viewport.classList.add('dragging');
+        try { viewport.setPointerCapture(e.pointerId); } catch(_) {}
+    });
+
+    viewport.addEventListener('pointermove', e => {
+        if (!state.dragging) return;
+        const dx = e.clientX - state.lastX;
+        const dy = e.clientY - state.lastY;
+        state.lastX = e.clientX;
+        state.lastY = e.clientY;
+        state.tx += dx;
+        state.ty += dy;
+        apply();
+    });
+
+    function endDrag(e){
+        if (!state.dragging) return;
+        state.dragging = false;
+        viewport.classList.remove('dragging');
+        try { viewport.releasePointerCapture(e.pointerId); } catch(_) {}
+    }
+
+    viewport.addEventListener('pointerup', endDrag);
+    viewport.addEventListener('pointercancel', endDrag);
+
+    // Zoom with mouse wheel – focus around cursor
+    viewport.addEventListener('wheel', e => {
+        e.preventDefault();
+        const zoomDir = e.deltaY < 0 ? 1 : -1;
+        const factor = zoomDir > 0 ? 1.1 : 0.9;
+        const oldScale = state.scale;
+        let newScale = oldScale * factor;
+        const minScale = 0.4, maxScale = 2.5;
+        if (newScale < minScale) newScale = minScale;
+        if (newScale > maxScale) newScale = maxScale;
+        if (newScale === oldScale) return;
+
+        const rect = viewport.getBoundingClientRect();
+        const cx = e.clientX - rect.left;
+        const cy = e.clientY - rect.top;
+
+        // world coordinates under cursor before zoom
+        const worldX = (cx - state.tx) / oldScale;
+        const worldY = (cy - state.ty) / oldScale;
+
+        state.scale = newScale;
+        // adjust translation so the same world point stays under the cursor
+        state.tx = cx - worldX * newScale;
+        state.ty = cy - worldY * newScale;
+        apply();
+    }, { passive:false });
+}
+
+function updateEvolutionTreeState() {
+    evolutionTree.forEach(node => {
+        const el = document.querySelector(`.evo-skill[data-id="${node.id}"]`);
+        if (!el) return;
+        const purchased = isSkillPurchased(node);
+        const unlocked = isSkillUnlocked(node);
+        const conflict  = hasPathConflict(node);
+        const affordable = canBuySkill(node);
+
+        el.classList.toggle('purchased', purchased);
+        el.classList.toggle('locked-parent', !unlocked || conflict);
+        el.classList.toggle('affordable', affordable && !purchased);
+        el.disabled = !affordable;
+
+        const st = el.querySelector('.evo-skill-state');
+        const costEl = el.querySelector('.evo-skill-cost');
+        if (st) {
+            if (purchased) st.textContent = 'Purchased';
+            else if (!unlocked) st.textContent = 'Locked (requires previous skill)';
+            else if (conflict) st.textContent = 'Locked (another evolution path chosen)';
+            else if (G.dna < node.dnaCost) st.textContent = 'Not enough DNA';
+            else st.textContent = 'Available';
+        }
+        if (costEl) {
+            costEl.textContent = purchased ? 'Purchased' : `Cost: 🧬 ${fmt(node.dnaCost)}`;
+        }
     });
 }
 
@@ -526,49 +1187,53 @@ function buildTimeline() {
 
 // ─── МОДАЛИ ────────────────────────────────────
 function openModal(title, bodyHTML) {
-    document.getElementById('modal-title').textContent = title;
-    document.getElementById('modal-body').innerHTML = bodyHTML;
-    document.getElementById('modal-overlay').classList.remove('hidden');
+    DOM.modalTitle.textContent = title;
+    DOM.modalBody.innerHTML = bodyHTML;
+    DOM.modalOverlay.classList.remove('hidden');
+    DOM.modalOverlay.classList.add('active');
 }
-function closeModal() { document.getElementById('modal-overlay').classList.add('hidden'); }
+function closeModal() {
+    DOM.modalOverlay.classList.remove('active');
+    DOM.modalOverlay.classList.add('hidden');
+}
 
 document.getElementById('modal-close').addEventListener('click', closeModal);
 document.getElementById('modal-overlay').addEventListener('click', e => {
-    if (e.target === document.getElementById('modal-overlay')) closeModal();
+    if (e.target === DOM.modalOverlay) closeModal();
 });
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
 
 // Help Modal
 document.getElementById('btn-help').addEventListener('click', () => {
-    openModal('❓ Как се играе', `
-        <h3>🧬 Основи</h3>
-        <p>Кликай върху бутона за да генерираш <strong>ДНК точки</strong>. Използвай ги за да купуваш ъпгрейди, които увеличават добива ти на клик и автоматичното производство (ДНК/сек).</p>
+    openModal('❓ How to Play', `
+        <h3>🧬 Basics</h3>
+        <p>Click the button to generate <strong>DNA points</strong>. Use them to buy upgrades that increase your yield per click and automatic production (DNA/sec).</p>
 
-        <h3>🧪 Еволюция (Престиж 1)</h3>
-        <p>Когато натрупаш достатъчно ДНК, можеш да <strong>еволюираш</strong>. Това нулира ДНК и ДНК ъпгрейдите ти, но получаваш <strong>мутации</strong> — валута за постоянни бонуси. Всяка еволюция те придвижва напред по еволюционната верига!</p>
+        <h3>🧪 Evolution (Prestige 1)</h3>
+        <p>When you accumulate enough DNA, you can <strong>evolve</strong>. This resets your DNA and DNA upgrades, but you gain <strong>mutations</strong> — a currency for permanent bonuses. Each evolution moves you forward in the evolutionary chain!</p>
 
-        <h3>🔬 Геномен скок (Престиж 2)</h3>
-        <p>След <strong>5 еволюции</strong> отключваш геномния скок. Той нулира всичко (включително мутации), но ти дава <strong>геноми</strong> — най-мощната валута за невероятни ъпгрейди.</p>
+        <h3>🔬 Genomic Leap (Prestige 2)</h3>
+        <p>After <strong>5 evolutions</strong>, you unlock the genomic leap. It resets everything (including mutations), but gives you <strong>genomes</strong> — the most powerful currency for incredible upgrades.</p>
 
-        <h3>⚡ Събития</h3>
-        <p>На всеки ~60 секунди има шанс да се появи <strong>случайно събитие</strong> — временен бонус към производството ти. Следи банера!</p>
+        <h3>⚡ Events</h3>
+        <p>Every ~60 seconds there is a chance for a <strong>random event</strong> to appear — a temporary bonus to your production. Keep an eye on the banner!</p>
 
-        <h3>🏆 Постижения</h3>
-        <p>Отключвай постижения за различни milestone-и. Провери раздела с 🏆 за да видиш прогреса си.</p>
+        <h3>🏆 Achievements</h3>
+        <p>Unlock achievements for various milestones. Check the 🏆 tab to view your progress.</p>
 
-        <h3>💡 Съвети</h3>
-        <p>• Инвестирай в <strong>Рибозоми</strong> и <strong>Митохондрии</strong> рано за пасивен доход.<br>
-        • <strong>Ензимни комплекси</strong> и <strong>Клетъчно делене</strong> мултиплицират ЦЯЛОТО производство.<br>
-        • Еволюирай бързо за да натрупаш мутации — те правят следващия рън много по-бърз.<br>
-        • Използвай <strong>×10</strong> или <strong>Макс</strong> бутоните за бързо купуване.</p>
+        <h3>💡 Tips</h3>
+        <p>• Invest in <strong>Ribosomes</strong> and <strong>Mitochondria</strong> early for passive income.<br>
+        • <strong>Enzyme Complexes</strong> and <strong>Cell Division</strong> multiply ALL production.<br>
+        • Evolve quickly to accumulate mutations — they make the next run much faster.<br>
+        • Use the <strong>×10</strong> or <strong>Max</strong> buttons to buy quickly.</p>
 
-        <h3>⌨️ Клавишни комбинации</h3>
+        <h3>⌨️ Hotkeys</h3>
         <table class="hk-table">
-            <tr><td><kbd>Space</kbd></td><td>Клик</td></tr>
-            <tr><td><kbd>1-4</kbd></td><td>Количество: ×1, ×10, ×25, Макс</td></tr>
-            <tr><td><kbd>E</kbd></td><td>Еволюция</td></tr>
-            <tr><td><kbd>H</kbd></td><td>Помощ (тази страница)</td></tr>
-            <tr><td><kbd>Esc</kbd></td><td>Затвори прозорец</td></tr>
+            <tr><td><kbd>Space</kbd></td><td>Click</td></tr>
+            <tr><td><kbd>1-4</kbd></td><td>Quantity: ×1, ×10, ×25, Max</td></tr>
+            <tr><td><kbd>E</kbd></td><td>Evolve</td></tr>
+            <tr><td><kbd>H</kbd></td><td>Help (this page)</td></tr>
+            <tr><td><kbd>Esc</kbd></td><td>Close Window</td></tr>
         </table>
     `);
 });
@@ -578,24 +1243,24 @@ document.getElementById('btn-stats').addEventListener('click', () => {
     const pt = (G.totalPlayTime + Date.now() - G.startTime) / 1000;
     const d = dps();
     const timeToEvo = d > 0 ? Math.max(0, (evoThresh() - G.totalDNA) / d) : Infinity;
-    openModal('📊 Статистика', `
+    openModal('📊 Statistics', `
         <div class="stats-grid">
-            <div class="sg-item"><small>Общо кликове</small><strong>${fmt(G.totalClicks)}</strong></div>
-            <div class="sg-item"><small>ДНК/клик</small><strong>${fmt(clickPow())}</strong></div>
-            <div class="sg-item"><small>ДНК/сек</small><strong>${fmt(d)}</strong></div>
-            <div class="sg-item"><small>Множител</small><strong>×${prodMult().toFixed(2)}</strong></div>
-            <div class="sg-item"><small>ДНК (текущи)</small><strong>${fmt(G.dna)}</strong></div>
-            <div class="sg-item"><small>ДНК (този рън)</small><strong>${fmt(G.totalDNA)}</strong></div>
-            <div class="sg-item"><small>ДНК (всички)</small><strong>${fmt(G.allTimeDNA)}</strong></div>
-            <div class="sg-item"><small>Мутации</small><strong>${fmt(G.mutations)}</strong></div>
-            <div class="sg-item"><small>Общо мутации</small><strong>${fmt(G.totalMutations)}</strong></div>
-            <div class="sg-item"><small>Геноми</small><strong>${fmt(G.genomes)}</strong></div>
-            <div class="sg-item"><small>Еволюции</small><strong>${G.evoCount}</strong></div>
-            <div class="sg-item"><small>Геномни скокове</small><strong>${G.leapCount}</strong></div>
-            <div class="sg-item"><small>Събития преживени</small><strong>${G.totalFrenzies}</strong></div>
-            <div class="sg-item"><small>Постижения</small><strong>${G.achUnlocked.length} / ${ACHIEVEMENTS.length}</strong></div>
-            <div class="sg-item"><small>Време на игра</small><strong>${fmtTime(pt)}</strong></div>
-            <div class="sg-item"><small>Време до еволюция</small><strong>${timeToEvo === Infinity ? '∞' : fmtTime(timeToEvo)}</strong></div>
+            <div class="sg-item"><small>Total Clicks</small><strong>${fmt(G.totalClicks)}</strong></div>
+            <div class="sg-item"><small>DNA/click</small><strong>${fmt(clickPow())}</strong></div>
+            <div class="sg-item"><small>DNA/sec</small><strong>${fmt(d)}</strong></div>
+            <div class="sg-item"><small>Multiplier</small><strong>×${prodMult().toFixed(2)}</strong></div>
+            <div class="sg-item"><small>DNA (current)</small><strong>${fmt(G.dna)}</strong></div>
+            <div class="sg-item"><small>DNA (this run)</small><strong>${fmt(G.totalDNA)}</strong></div>
+            <div class="sg-item"><small>DNA (all time)</small><strong>${fmt(G.allTimeDNA)}</strong></div>
+            <div class="sg-item"><small>Mutations</small><strong>${fmt(G.mutations)}</strong></div>
+            <div class="sg-item"><small>Total Mutations</small><strong>${fmt(G.totalMutations)}</strong></div>
+            <div class="sg-item"><small>Genomes</small><strong>${fmt(G.genomes)}</strong></div>
+            <div class="sg-item"><small>Evolutions</small><strong>${G.evoCount}</strong></div>
+            <div class="sg-item"><small>Genomic Leaps</small><strong>${G.leapCount}</strong></div>
+            <div class="sg-item"><small>Events Survived</small><strong>${G.totalFrenzies}</strong></div>
+            <div class="sg-item"><small>Achievements</small><strong>${G.achUnlocked.length} / ${ACHIEVEMENTS.length}</strong></div>
+            <div class="sg-item"><small>Play Time</small><strong>${fmtTime(pt)}</strong></div>
+            <div class="sg-item"><small>Time to Evolution</small><strong>${timeToEvo === Infinity ? '∞' : fmtTime(timeToEvo)}</strong></div>
         </div>
     `);
 });
@@ -607,31 +1272,31 @@ document.getElementById('btn-ach').addEventListener('click', () => {
         const done = G.achUnlocked.includes(a.id);
         html += `<div class="ach ${done ? '' : 'locked'}">
             <span class="ach-ico">${done ? a.icon : '🔒'}</span>
-            <div class="ach-info"><div class="ach-name">${done ? a.name : '???'}</div><div class="ach-desc">${done ? a.desc : 'Все още не е отключено.'}</div></div>
+            <div class="ach-info"><div class="ach-name">${done ? a.name : '???'}</div><div class="ach-desc">${done ? a.desc : 'Not unlocked yet.'}</div></div>
             ${done ? '<span class="ach-check">✓</span>' : ''}
         </div>`;
     });
     html += '</div>';
-    openModal('🏆 Постижения (' + G.achUnlocked.length + '/' + ACHIEVEMENTS.length + ')', html);
+    openModal('🏆 Achievements (' + G.achUnlocked.length + '/' + ACHIEVEMENTS.length + ')', html);
 });
 
 // Settings Modal
 document.getElementById('btn-settings').addEventListener('click', () => {
-    openModal('⚙️ Настройки', `
+    openModal('⚙️ Settings', `
         <div class="setting-row">
-            <div class="setting-label">Потвърждение при еволюция<small>Показвай диалог преди еволюция</small></div>
+            <div class="setting-label">Evolution Leap Confirmation<small>Show dialog before evolution leap</small></div>
             <button class="toggle ${G.settings.confirmEvo ? 'on' : ''}" data-setting="confirmEvo"></button>
         </div>
         <div class="setting-row">
-            <div class="setting-label">Потвърждение при геномен скок<small>Показвай диалог преди скок</small></div>
+            <div class="setting-label">Leap Confirmation<small>Show dialog before genomic leap</small></div>
             <button class="toggle ${G.settings.confirmLeap ? 'on' : ''}" data-setting="confirmLeap"></button>
         </div>
         <div class="setting-row">
-            <div class="setting-label">Частици при клик<small>Визуален ефект при кликане</small></div>
+            <div class="setting-label">Click Particles<small>Visual effect on click</small></div>
             <button class="toggle ${G.settings.particles ? 'on' : ''}" data-setting="particles"></button>
         </div>
         <div class="setting-row">
-            <div class="setting-label">Нотация на числа<small>Кратка: 1.5M · Научна: 1.50e+6</small></div>
+            <div class="setting-label">Number Notation<small>Short: 1.5M · Scientific: 1.50e+6</small></div>
             <button class="toggle ${G.settings.notation === 'scientific' ? 'on' : ''}" data-setting="notation"></button>
         </div>
     `);
@@ -658,6 +1323,14 @@ function initTabs() {
             document.querySelectorAll('.tab-page').forEach(p => p.classList.remove('active'));
             t.classList.add('active');
             document.getElementById(t.dataset.tab).classList.add('active');
+
+            // Разширен изглед за дървото и геномите
+            if (t.dataset.tab === 't-tree' || t.dataset.tab === 't-gen') {
+                document.body.classList.add('wide-shop');
+            } else {
+                document.body.classList.remove('wide-shop');
+            }
+            if (t.dataset.tab === 't-col') buildArtifacts();
         });
     });
     document.querySelectorAll('.bq').forEach(b => {
@@ -685,9 +1358,10 @@ function load() {
         G.du = { ...d.du, ...(p.du || {}) };
         G.mu = { ...d.mu, ...(p.mu || {}) };
         G.gu = { ...d.gu, ...(p.gu || {}) };
+        G.evoSkills = { ...d.evoSkills, ...(p.evoSkills || {}) };
         G.settings = { ...d.settings, ...(p.settings || {}) };
         G.achUnlocked = p.achUnlocked || [];
-    } catch(e) { console.error('Грешка при зареждане:', e); }
+    } catch(e) { console.error('Error loading:', e); }
 
     const dt = (Date.now() - G.lastTick) / 1000;
     if (dt > 5) {
@@ -697,8 +1371,8 @@ function load() {
             const eff = Math.min(dt, cap);
             const gain = d * eff;
             G.dna += gain; G.totalDNA += gain; G.allTimeDNA += gain;
-            setTimeout(() => showToast('event-toast', '⏱️', 'Офлайн прогрес',
-                `${fmtTime(eff)} → +${fmt(gain)} ДНК`, 5000), 400);
+            setTimeout(() => showToast('event-toast', '⏱️', 'Offline progress',
+                `${fmtTime(eff)} → +${fmt(gain)} DNA`, 5000), 400);
         }
     }
     G.lastTick = Date.now();
@@ -713,44 +1387,63 @@ function tick(now) {
         const gain = d * dt;
         G.dna += gain; G.totalDNA += gain; G.allTimeDNA += gain;
     }
-    checkAchievements();
-    updateUI();
+    throttledAchCheck();
+
+    // Fast path: buttery smooth 60 FPS counting for main resources
+    DOM.dnaVal.textContent = fmt(G.dna);
+    DOM.sTotal.textContent = fmt(G.totalDNA);
+    const th = evoThresh(), pct = Math.min(G.totalDNA / th, 1);
+    DOM.evoFill.style.width = (pct * 100) + '%';
+    DOM.evoText.textContent = fmt(G.totalDNA) + ' / ' + fmt(th);
+
     requestAnimationFrame(tick);
 }
 
 // ─── СЪБИТИЯ ────────────────────────────────────
-document.getElementById('click-btn').addEventListener('click', doClick);
-document.getElementById('evo-btn').addEventListener('click', evolve);
-document.getElementById('leap-btn').addEventListener('click', genomeLeap);
-document.getElementById('reset-btn').addEventListener('click', () => {
-    if (confirm('🗑️ Сигурни ли сте? Целият прогрес ще бъде изтрит завинаги!')) {
-        localStorage.removeItem(SAVE_KEY);
-        location.reload();
-    }
-});
+function bindEvents() {
+    DOM.clickBtn.addEventListener('click', doClick);
+    
+    // 3D Tilt Effect
+    DOM.clickBtn.addEventListener('mousemove', (e) => {
+        const rect = DOM.clickBtn.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        const xc = (x / rect.width - 0.5) * 2;
+        const yc = (y / rect.height - 0.5) * 2;
+        DOM.clickBtn.style.transform = `perspective(1000px) rotateX(${yc * -15}deg) rotateY(${xc * 15}deg) scale3d(1.05, 1.05, 1.05)`;
+    });
+    DOM.clickBtn.addEventListener('mouseleave', () => {
+        DOM.clickBtn.style.transform = `perspective(1000px) rotateX(0) rotateY(0) scale3d(1, 1, 1)`;
+    });
 
-document.addEventListener('keydown', e => {
-    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
-    if (document.getElementById('modal-overlay').classList.contains('hidden') === false) return;
-    switch (e.code) {
-        case 'Space':
-            e.preventDefault();
-            const btn = document.getElementById('click-btn');
-            const rect = btn.getBoundingClientRect();
-            const pw = clickPow();
-            G.dna += pw; G.totalDNA += pw; G.allTimeDNA += pw; G.totalClicks++;
-            spawnFloat('+' + fmt(pw), rect.left + rect.width/2, rect.top - 5);
-            if (G.settings.particles) spawnParticles(rect.left + rect.width/2, rect.top + rect.height/2, 5);
-            checkAchievements();
-            break;
-        case 'Digit1': case 'Numpad1': setQty(1); break;
-        case 'Digit2': case 'Numpad2': setQty(10); break;
-        case 'Digit3': case 'Numpad3': setQty(25); break;
-        case 'Digit4': case 'Numpad4': setQty('max'); break;
-        case 'KeyE': if (canEvo()) evolve(); break;
-        case 'KeyH': document.getElementById('btn-help').click(); break;
-    }
-});
+    DOM.evoBtn.addEventListener('click', evolve);
+    DOM.leapBtn.addEventListener('click', genomeLeap);
+    document.getElementById('reset-btn').addEventListener('click', () => {
+        if (confirm('🗑️ Are you sure? All progress will be deleted permanently!')) {
+            localStorage.removeItem(SAVE_KEY);
+            location.reload();
+        }
+    });
+
+    document.addEventListener('keydown', e => {
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+        if (DOM.modalOverlay.classList.contains('active')) return;
+        switch (e.code) {
+            case 'Space':
+                e.preventDefault();
+                if (DOM.clickBtn) doClick({ currentTarget: DOM.clickBtn });
+                break;
+            case 'Digit1': case 'Numpad1': setQty(1); break;
+            case 'Digit2': case 'Numpad2': setQty(10); break;
+            case 'Digit3': case 'Numpad3': setQty(25); break;
+            case 'Digit4': case 'Numpad4': setQty('max'); break;
+            case 'KeyE': if (canEvo()) evolve(); break;
+            case 'KeyH': document.getElementById('btn-help').click(); break;
+        }
+    });
+    const bab = document.getElementById('btn-buy-all');
+    if (bab) bab.addEventListener('click', buyAllDNA);
+}
 
 function setQty(q) {
     buyQty = q;
@@ -761,18 +1454,95 @@ function setQty(q) {
 }
 
 // ─── ИНИЦИАЛИЗАЦИЯ ──────────────────────────────
+cacheDom();
+bindEvents();
 load();
 initTabs();
+initBgEntities();
 buildShop();
 buildTimeline();
 updateUI();
 G._prev = performance.now();
 requestAnimationFrame(tick);
+setInterval(updateUI, 120); // Throttle full UI updates to ~8 frames per second
 setInterval(save, 2000);
 setInterval(trySpawnEvent, 60000); // try event every 60s
 // Check event on load too (after 10s to not overwhelm)
 setTimeout(trySpawnEvent, 10000);
-// Show help on very first play
-if (G.totalClicks === 0 && G.evoCount === 0) {
-    setTimeout(() => document.getElementById('btn-help').click(), 500);
+// ─── GENETIC PUZZLE ────────────────────────────
+let puzzleSequence = [];
+let puzzleInput = [];
+
+function startGeneticPuzzle() {
+    const bases = ['A', 'T', 'G', 'C'];
+    puzzleSequence = [];
+    puzzleInput = [];
+    for (let i = 0; i < 5; i++) {
+        puzzleSequence.push(bases[Math.floor(Math.random() * 4)]);
+    }
+
+    DOM.modalTitle.textContent = '🧬 Genetic Sequence Puzzle';
+    DOM.modalBody.innerHTML = `
+        <div class="puzzle-wrap">
+            <p>Match the sequence to strengthen your DNA permanently!</p>
+            <div class="puzzle-seq">${puzzleSequence.join(' ')}</div>
+            <div class="puzzle-input" id="puzzle-input-display">...</div>
+            <div class="puzzle-btns">
+                <button class="btn-action puzzle-btn" onclick="handlePuzzleClick('A')">A</button>
+                <button class="btn-action puzzle-btn" onclick="handlePuzzleClick('T')">T</button>
+                <button class="btn-action puzzle-btn" onclick="handlePuzzleClick('G')">G</button>
+                <button class="btn-action puzzle-btn" onclick="handlePuzzleClick('C')">C</button>
+            </div>
+        </div>
+    `;
+    DOM.modalOverlay.classList.add('active');
+}
+
+function handlePuzzleClick(base) {
+    puzzleInput.push(base);
+    const display = document.getElementById('puzzle-input-display');
+    if (display) display.textContent = puzzleInput.join(' ');
+
+    const idx = puzzleInput.length - 1;
+    if (puzzleInput[idx] !== puzzleSequence[idx]) {
+        showToast('fail-toast', '❌', 'Sequence Broken', 'Transformation failed...');
+        DOM.modalOverlay.classList.remove('active');
+        return;
+    }
+
+    if (puzzleInput.length === puzzleSequence.length) {
+        G.puzzleMult *= 1.1;
+        showToast('puzzle-toast', '✨', 'Sequence Complete!', 'Permanent ×1.10 production boost!');
+        DOM.modalOverlay.classList.remove('active');
+        updateUI();
+    }
+}
+
+function tryDropArtifact() {
+    if (Math.random() > 0.001) return; // 0.1% chance
+    const unowned = ARTIFACTS.filter(a => !G.artifacts.includes(a.id));
+    if (unowned.length === 0) return;
+    
+    const art = unowned[Math.floor(Math.random() * unowned.length)];
+    G.artifacts.push(art.id);
+    showToast('art-toast', art.icon, 'Artifact Discovered!', art.name);
+    buildArtifacts(); updateUI();
+}
+
+function buildArtifacts() {
+    if (!DOM.artifactGrid) return;
+    DOM.artifactGrid.innerHTML = '';
+    ARTIFACTS.forEach(a => {
+        const owned = G.artifacts.includes(a.id);
+        const el = document.createElement('div');
+        el.className = `artifact-item ${owned ? 'owned' : 'missing'}`;
+        el.innerHTML = `
+            <div class="art-icon">${owned ? a.icon : '❓'}</div>
+            <div class="art-info">
+                <div class="art-name">${owned ? a.name : 'Unknown Artifact'}</div>
+                <div class="art-desc">${owned ? a.desc : 'Keep clicking to discover...'}</div>
+            </div>
+        `;
+        DOM.artifactGrid.appendChild(el);
+    });
 }
